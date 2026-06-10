@@ -1,4 +1,6 @@
+using System.Security.Claims;
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using TasksApi.Application.Commands;
@@ -21,23 +23,41 @@ public class TasksControllerTests
     private readonly TasksController _controller;
     private readonly GetAllTasksQueryHandler _queryHandler;
     private readonly GetTaskByIdQueryHandler _getByIdQueryHandler;
+    private readonly Guid _testUserId;
 
     public TasksControllerTests()
     {
+        _testUserId = Guid.NewGuid();
         _repositoryMock = new Mock<ITaskRepository>();
         _queryHandler = new GetAllTasksQueryHandler(_repositoryMock.Object);
         _getByIdQueryHandler = new GetTaskByIdQueryHandler(_repositoryMock.Object);
         _createHandlerMock = new Mock<ICreateTaskCommandHandler>();
         _updateHandlerMock = new Mock<IUpdateTaskCommandHandler>();
         _deleteHandlerMock = new Mock<IDeleteTaskCommandHandler>();
-        _controller = new TasksController(_queryHandler, _getByIdQueryHandler, _createHandlerMock.Object, _updateHandlerMock.Object, _deleteHandlerMock.Object);
+        _controller = new TasksController(
+            _queryHandler, 
+            _getByIdQueryHandler, 
+            _createHandlerMock.Object, 
+            _updateHandlerMock.Object, 
+            _deleteHandlerMock.Object);
+
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, _testUserId.ToString())
+        };
+        var identity = new ClaimsIdentity(claims, "TestAuth");
+        var principal = new ClaimsPrincipal(identity);
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = principal }
+        };
     }
 
     [Fact]
     public async Task GetAllTasks_ReturnsOkResult_WhenTasksExist()
     {
         // Arrange
-        var userId = Guid.NewGuid();
         var tasks = new List<TaskEntity>
         {
             new TaskEntity(
@@ -47,7 +67,7 @@ public class TasksControllerTests
                 TaskEntityStatus.Pending,
                 TaskPriority.High,
                 DateTime.UtcNow.AddDays(1),
-                userId
+                _testUserId
             ),
             new TaskEntity(
                 Guid.NewGuid(),
@@ -56,16 +76,16 @@ public class TasksControllerTests
                 TaskEntityStatus.InProgress,
                 TaskPriority.Medium,
                 DateTime.UtcNow.AddDays(2),
-                userId
+                _testUserId
             )
         };
 
         _repositoryMock
-            .Setup(r => r.GetAllByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetAllByUserIdAsync(_testUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(tasks);
 
         // Act
-        var result = await _controller.GetAllTasks(userId);
+        var result = await _controller.GetAllTasks();
 
         // Assert
         result.Result.Should().BeOfType<OkObjectResult>();
@@ -77,34 +97,20 @@ public class TasksControllerTests
     public async Task GetAllTasks_ReturnsOkResult_WithEmptyList_WhenNoTasksExist()
     {
         // Arrange
-        var userId = Guid.NewGuid();
         var emptyList = new List<TaskEntity>();
 
         _repositoryMock
-            .Setup(r => r.GetAllByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetAllByUserIdAsync(_testUserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(emptyList);
 
         // Act
-        var result = await _controller.GetAllTasks(userId);
+        var result = await _controller.GetAllTasks();
 
         // Assert
         result.Result.Should().BeOfType<OkObjectResult>();
         var okResult = result.Result as OkObjectResult;
         var tasks = okResult!.Value as IEnumerable<TaskEntity>;
         tasks.Should().BeEmpty();
-    }
-
-    [Fact]
-    public async Task GetAllTasks_ReturnsBadRequest_WhenUserIdIsEmpty()
-    {
-        // Arrange
-        var emptyUserId = Guid.Empty;
-
-        // Act
-        var result = await _controller.GetAllTasks(emptyUserId);
-
-        // Assert
-        result.Result.Should().BeOfType<BadRequestObjectResult>();
     }
 
     [Fact]
@@ -116,8 +122,7 @@ public class TasksControllerTests
             Title = "New Task",
             Description = "Task Description",
             Priority = TaskPriority.High,
-            DueDate = DateTime.UtcNow.AddDays(7),
-            UserId = Guid.NewGuid()
+            DueDate = DateTime.UtcNow.AddDays(7)
         };
 
         var createdTask = new TaskEntity(
@@ -127,7 +132,7 @@ public class TasksControllerTests
             TaskEntityStatus.Pending,
             request.Priority,
             request.DueDate,
-            request.UserId
+            _testUserId
         );
 
         _createHandlerMock
@@ -154,8 +159,7 @@ public class TasksControllerTests
             Title = "",
             Description = "Description",
             Priority = TaskPriority.Medium,
-            DueDate = DateTime.UtcNow.AddDays(5),
-            UserId = Guid.NewGuid()
+            DueDate = DateTime.UtcNow.AddDays(5)
         };
 
         _createHandlerMock
@@ -170,27 +174,40 @@ public class TasksControllerTests
     }
 
     [Fact]
-    public async Task Create_ReturnsBadRequest_WhenUserIdIsEmpty()
+    public async Task Create_ShouldUseUserIdFromClaims()
     {
         // Arrange
         var request = new CreateTaskRequest
         {
-            Title = "Valid Title",
-            Description = "Description",
-            Priority = TaskPriority.Low,
-            DueDate = DateTime.UtcNow.AddDays(3),
-            UserId = Guid.Empty
+            Title = "Task with Claim UserId",
+            Description = "Should use userId from JWT claims",
+            Priority = TaskPriority.Medium,
+            DueDate = DateTime.UtcNow.AddDays(10)
         };
 
+        var createdTask = new TaskEntity(
+            Guid.NewGuid(),
+            request.Title,
+            request.Description,
+            TaskEntityStatus.Pending,
+            request.Priority,
+            request.DueDate,
+            _testUserId
+        );
+
+        CreateTaskCommand? capturedCommand = null;
         _createHandlerMock
             .Setup(h => h.Handle(It.IsAny<CreateTaskCommand>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new ArgumentException("UserId cannot be empty", "userId"));
+            .Callback<CreateTaskCommand, CancellationToken>((cmd, ct) => capturedCommand = cmd)
+            .ReturnsAsync(createdTask);
 
         // Act
         var result = await _controller.Create(request);
 
         // Assert
-        result.Result.Should().BeOfType<BadRequestObjectResult>();
+        result.Result.Should().BeOfType<CreatedAtActionResult>();
+        capturedCommand.Should().NotBeNull();
+        capturedCommand!.UserId.Should().Be(_testUserId);
     }
 
     [Fact]
@@ -202,8 +219,7 @@ public class TasksControllerTests
             Title = "Task with Default Status",
             Description = "Should default to Pending",
             Priority = TaskPriority.Medium,
-            DueDate = DateTime.UtcNow.AddDays(10),
-            UserId = Guid.NewGuid()
+            DueDate = DateTime.UtcNow.AddDays(10)
         };
 
         TaskEntity? capturedTask = null;
@@ -241,8 +257,7 @@ public class TasksControllerTests
             Title = "Minimal Task",
             Description = null,
             Priority = TaskPriority.Low,
-            DueDate = null,
-            UserId = Guid.NewGuid()
+            DueDate = null
         };
 
         var createdTask = new TaskEntity(
@@ -252,7 +267,7 @@ public class TasksControllerTests
             TaskEntityStatus.Pending,
             request.Priority,
             request.DueDate,
-            request.UserId
+            _testUserId
         );
 
         _createHandlerMock
@@ -275,15 +290,13 @@ public class TasksControllerTests
     {
         // Arrange
         var taskId = Guid.NewGuid();
-        var userId = Guid.NewGuid();
         var request = new UpdateTaskRequest
         {
             Title = "Updated Title",
             Description = "Updated Description",
             Priority = TaskPriority.Urgent,
             Status = TaskEntityStatus.InProgress,
-            DueDate = DateTime.UtcNow.AddDays(15),
-            UserId = userId
+            DueDate = DateTime.UtcNow.AddDays(15)
         };
 
         var updatedTask = new TaskEntity(
@@ -293,7 +306,7 @@ public class TasksControllerTests
             request.Status,
             request.Priority,
             request.DueDate,
-            userId
+            _testUserId
         );
 
         _updateHandlerMock
@@ -301,7 +314,7 @@ public class TasksControllerTests
             .ReturnsAsync(updatedTask);
 
         // Act
-        var result = await _controller.UpdateTask(taskId, request, userId);
+        var result = await _controller.UpdateTask(taskId, request);
 
         // Assert
         result.Result.Should().BeOfType<OkObjectResult>();
@@ -315,7 +328,7 @@ public class TasksControllerTests
                 c.Description == request.Description &&
                 c.Priority == request.Priority &&
                 c.Status == request.Status &&
-                c.UserId == userId),
+                c.UserId == _testUserId),
             It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -325,15 +338,13 @@ public class TasksControllerTests
     {
         // Arrange
         var taskId = Guid.NewGuid();
-        var userId = Guid.NewGuid();
         var request = new UpdateTaskRequest
         {
             Title = "Updated Title",
             Description = "Updated Description",
             Priority = TaskPriority.High,
             Status = TaskEntityStatus.InProgress,
-            DueDate = DateTime.UtcNow.AddDays(10),
-            UserId = userId
+            DueDate = DateTime.UtcNow.AddDays(10)
         };
 
         _updateHandlerMock
@@ -341,7 +352,7 @@ public class TasksControllerTests
             .ThrowsAsync(new NotFoundException($"Task with ID {taskId} not found"));
 
         // Act
-        var result = await _controller.UpdateTask(taskId, request, userId);
+        var result = await _controller.UpdateTask(taskId, request);
 
         // Assert
         result.Result.Should().BeOfType<NotFoundObjectResult>();
@@ -354,24 +365,21 @@ public class TasksControllerTests
     {
         // Arrange
         var taskId = Guid.NewGuid();
-        var ownerId = Guid.NewGuid();
-        var differentUserId = Guid.NewGuid();
         var request = new UpdateTaskRequest
         {
             Title = "Updated Title",
             Description = "Updated Description",
             Priority = TaskPriority.High,
             Status = TaskEntityStatus.InProgress,
-            DueDate = DateTime.UtcNow.AddDays(10),
-            UserId = differentUserId
+            DueDate = DateTime.UtcNow.AddDays(10)
         };
 
         _updateHandlerMock
             .Setup(h => h.Handle(It.IsAny<UpdateTaskCommand>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new ForbiddenException($"User {differentUserId} is not authorized to update task {taskId}"));
+            .ThrowsAsync(new ForbiddenException($"User {_testUserId} is not authorized to update task {taskId}"));
 
         // Act
-        var result = await _controller.UpdateTask(taskId, request, differentUserId);
+        var result = await _controller.UpdateTask(taskId, request);
 
         // Assert
         result.Result.Should().BeOfType<ObjectResult>();
@@ -385,15 +393,13 @@ public class TasksControllerTests
     {
         // Arrange
         var taskId = Guid.NewGuid();
-        var userId = Guid.NewGuid();
         var request = new UpdateTaskRequest
         {
             Title = "", // Invalid empty title
             Description = "Updated Description",
             Priority = TaskPriority.High,
             Status = TaskEntityStatus.InProgress,
-            DueDate = DateTime.UtcNow.AddDays(10),
-            UserId = userId
+            DueDate = DateTime.UtcNow.AddDays(10)
         };
 
         _updateHandlerMock
@@ -401,7 +407,7 @@ public class TasksControllerTests
             .ThrowsAsync(new ArgumentException("Title cannot be empty", "title"));
 
         // Act
-        var result = await _controller.UpdateTask(taskId, request, userId);
+        var result = await _controller.UpdateTask(taskId, request);
 
         // Assert
         result.Result.Should().BeOfType<BadRequestObjectResult>();
@@ -414,7 +420,6 @@ public class TasksControllerTests
     {
         // Arrange
         var taskId = Guid.NewGuid();
-        var userId = Guid.NewGuid();
         var dueDate = DateTime.UtcNow.AddDays(20);
         var request = new UpdateTaskRequest
         {
@@ -422,8 +427,7 @@ public class TasksControllerTests
             Description = "Specific Description",
             Priority = TaskPriority.Low,
             Status = TaskEntityStatus.Completed,
-            DueDate = dueDate,
-            UserId = userId
+            DueDate = dueDate
         };
 
         var updatedTask = new TaskEntity(
@@ -433,7 +437,7 @@ public class TasksControllerTests
             request.Status,
             request.Priority,
             request.DueDate,
-            userId
+            _testUserId
         );
 
         UpdateTaskCommand? capturedCommand = null;
@@ -443,7 +447,7 @@ public class TasksControllerTests
             .ReturnsAsync(updatedTask);
 
         // Act
-        await _controller.UpdateTask(taskId, request, userId);
+        await _controller.UpdateTask(taskId, request);
 
         // Assert
         capturedCommand.Should().NotBeNull();
@@ -453,7 +457,7 @@ public class TasksControllerTests
         capturedCommand.Priority.Should().Be(request.Priority);
         capturedCommand.Status.Should().Be(request.Status);
         capturedCommand.DueDate.Should().BeCloseTo(dueDate, TimeSpan.FromSeconds(1));
-        capturedCommand.UserId.Should().Be(userId);
+        capturedCommand.UserId.Should().Be(_testUserId);
     }
 
     [Fact]
@@ -461,14 +465,13 @@ public class TasksControllerTests
     {
         // Arrange
         var taskId = Guid.NewGuid();
-        var userId = Guid.NewGuid();
 
         _deleteHandlerMock
             .Setup(h => h.Handle(It.IsAny<DeleteTaskCommand>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         // Act
-        var result = await _controller.DeleteTask(taskId, userId);
+        var result = await _controller.DeleteTask(taskId);
 
         // Assert
         result.Should().BeOfType<NoContentResult>();
@@ -476,7 +479,7 @@ public class TasksControllerTests
         _deleteHandlerMock.Verify(h => h.Handle(
             It.Is<DeleteTaskCommand>(c =>
                 c.Id == taskId &&
-                c.UserId == userId),
+                c.UserId == _testUserId),
             It.IsAny<CancellationToken>()),
             Times.Once);
     }
@@ -486,14 +489,13 @@ public class TasksControllerTests
     {
         // Arrange
         var taskId = Guid.NewGuid();
-        var userId = Guid.NewGuid();
 
         _deleteHandlerMock
             .Setup(h => h.Handle(It.IsAny<DeleteTaskCommand>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new NotFoundException($"Task with ID {taskId} not found"));
 
         // Act
-        var result = await _controller.DeleteTask(taskId, userId);
+        var result = await _controller.DeleteTask(taskId);
 
         // Assert
         result.Should().BeOfType<NotFoundObjectResult>();
@@ -506,15 +508,13 @@ public class TasksControllerTests
     {
         // Arrange
         var taskId = Guid.NewGuid();
-        var ownerId = Guid.NewGuid();
-        var differentUserId = Guid.NewGuid();
 
         _deleteHandlerMock
             .Setup(h => h.Handle(It.IsAny<DeleteTaskCommand>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new ForbiddenException($"User {differentUserId} is not authorized to delete task {taskId}"));
+            .ThrowsAsync(new ForbiddenException($"User {_testUserId} is not authorized to delete task {taskId}"));
 
         // Act
-        var result = await _controller.DeleteTask(taskId, differentUserId);
+        var result = await _controller.DeleteTask(taskId);
 
         // Assert
         result.Should().BeOfType<ObjectResult>();
@@ -528,7 +528,6 @@ public class TasksControllerTests
     {
         // Arrange
         var taskId = Guid.NewGuid();
-        var userId = Guid.NewGuid();
 
         DeleteTaskCommand? capturedCommand = null;
         _deleteHandlerMock
@@ -537,12 +536,12 @@ public class TasksControllerTests
             .Returns(Task.CompletedTask);
 
         // Act
-        await _controller.DeleteTask(taskId, userId);
+        await _controller.DeleteTask(taskId);
 
         // Assert
         capturedCommand.Should().NotBeNull();
         capturedCommand!.Id.Should().Be(taskId);
-        capturedCommand.UserId.Should().Be(userId);
+        capturedCommand.UserId.Should().Be(_testUserId);
     }
 
     [Fact]
@@ -550,7 +549,6 @@ public class TasksControllerTests
     {
         // Arrange
         var taskId = Guid.NewGuid();
-        var userId = Guid.NewGuid();
         var expectedTask = new TaskEntity(
             taskId,
             "Test Task",
@@ -558,7 +556,7 @@ public class TasksControllerTests
             TaskEntityStatus.Pending,
             TaskPriority.High,
             DateTime.UtcNow.AddDays(1),
-            userId
+            _testUserId
         );
 
         _repositoryMock
@@ -566,7 +564,7 @@ public class TasksControllerTests
             .ReturnsAsync(expectedTask);
 
         // Act
-        var result = await _controller.GetTaskById(taskId, userId);
+        var result = await _controller.GetTaskById(taskId);
 
         // Assert
         result.Result.Should().BeOfType<OkObjectResult>();
@@ -579,14 +577,13 @@ public class TasksControllerTests
     {
         // Arrange
         var taskId = Guid.NewGuid();
-        var userId = Guid.NewGuid();
 
         _repositoryMock
             .Setup(r => r.GetByIdAsync(taskId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((TaskEntity?)null);
 
         // Act
-        var result = await _controller.GetTaskById(taskId, userId);
+        var result = await _controller.GetTaskById(taskId);
 
         // Assert
         result.Result.Should().BeOfType<NotFoundObjectResult>();
@@ -600,7 +597,6 @@ public class TasksControllerTests
         // Arrange
         var taskId = Guid.NewGuid();
         var ownerId = Guid.NewGuid();
-        var differentUserId = Guid.NewGuid();
         
         var task = new TaskEntity(
             taskId,
@@ -617,7 +613,7 @@ public class TasksControllerTests
             .ReturnsAsync(task);
 
         // Act
-        var result = await _controller.GetTaskById(taskId, differentUserId);
+        var result = await _controller.GetTaskById(taskId);
 
         // Assert
         result.Result.Should().BeOfType<ObjectResult>();
@@ -628,26 +624,61 @@ public class TasksControllerTests
     [Fact]
     public async Task GetTaskById_EmptyId_Returns400()
     {
-        // Arrange
-        var userId = Guid.NewGuid();
-
         // Act
-        var result = await _controller.GetTaskById(Guid.Empty, userId);
+        var result = await _controller.GetTaskById(Guid.Empty);
 
         // Assert
         result.Result.Should().BeOfType<BadRequestObjectResult>();
     }
 
     [Fact]
-    public async Task GetTaskById_EmptyUserId_Returns400()
+    public async Task GetAllTasks_Returns401_WhenUserNotAuthenticated()
     {
         // Arrange
-        var taskId = Guid.NewGuid();
+        var unauthenticatedController = new TasksController(
+            _queryHandler,
+            _getByIdQueryHandler,
+            _createHandlerMock.Object,
+            _updateHandlerMock.Object,
+            _deleteHandlerMock.Object);
+
+        unauthenticatedController.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal() }
+        };
 
         // Act
-        var result = await _controller.GetTaskById(taskId, Guid.Empty);
+        var result = await unauthenticatedController.GetAllTasks();
 
         // Assert
-        result.Result.Should().BeOfType<BadRequestObjectResult>();
+        result.Result.Should().BeOfType<UnauthorizedObjectResult>();
+    }
+
+    [Fact]
+    public async Task Create_Returns401_WhenUserNotAuthenticated()
+    {
+        // Arrange
+        var request = new CreateTaskRequest
+        {
+            Title = "Unauthorized Task"
+        };
+
+        var unauthenticatedController = new TasksController(
+            _queryHandler,
+            _getByIdQueryHandler,
+            _createHandlerMock.Object,
+            _updateHandlerMock.Object,
+            _deleteHandlerMock.Object);
+
+        unauthenticatedController.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal() }
+        };
+
+        // Act
+        var result = await unauthenticatedController.Create(request);
+
+        // Assert
+        result.Result.Should().BeOfType<UnauthorizedObjectResult>();
     }
 }

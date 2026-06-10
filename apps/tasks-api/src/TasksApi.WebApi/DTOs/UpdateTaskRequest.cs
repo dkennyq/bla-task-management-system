@@ -9,5 +9,4 @@ public class UpdateTaskRequest
     public TaskPriority Priority { get; set; } = TaskPriority.Medium;
     public TaskEntityStatus Status { get; set; } = TaskEntityStatus.Pending;
     public DateTime? DueDate { get; set; }
-    public Guid UserId { get; set; }
 }

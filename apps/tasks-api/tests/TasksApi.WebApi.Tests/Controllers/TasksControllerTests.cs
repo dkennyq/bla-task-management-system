@@ -17,6 +17,7 @@ public class TasksControllerTests
     private readonly Mock<ITaskRepository> _repositoryMock;
     private readonly Mock<ICreateTaskCommandHandler> _createHandlerMock;
     private readonly Mock<IUpdateTaskCommandHandler> _updateHandlerMock;
+    private readonly Mock<IDeleteTaskCommandHandler> _deleteHandlerMock;
     private readonly TasksController _controller;
     private readonly GetAllTasksQueryHandler _queryHandler;
 
@@ -26,7 +27,8 @@ public class TasksControllerTests
         _queryHandler = new GetAllTasksQueryHandler(_repositoryMock.Object);
         _createHandlerMock = new Mock<ICreateTaskCommandHandler>();
         _updateHandlerMock = new Mock<IUpdateTaskCommandHandler>();
-        _controller = new TasksController(_queryHandler, _createHandlerMock.Object, _updateHandlerMock.Object);
+        _deleteHandlerMock = new Mock<IDeleteTaskCommandHandler>();
+        _controller = new TasksController(_queryHandler, _createHandlerMock.Object, _updateHandlerMock.Object, _deleteHandlerMock.Object);
     }
 
     [Fact]
@@ -449,6 +451,95 @@ public class TasksControllerTests
         capturedCommand.Priority.Should().Be(request.Priority);
         capturedCommand.Status.Should().Be(request.Status);
         capturedCommand.DueDate.Should().BeCloseTo(dueDate, TimeSpan.FromSeconds(1));
+        capturedCommand.UserId.Should().Be(userId);
+    }
+
+    [Fact]
+    public async Task DeleteTask_ShouldReturn204_WhenTaskDeletedSuccessfully()
+    {
+        // Arrange
+        var taskId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+
+        _deleteHandlerMock
+            .Setup(h => h.Handle(It.IsAny<DeleteTaskCommand>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _controller.DeleteTask(taskId, userId);
+
+        // Assert
+        result.Should().BeOfType<NoContentResult>();
+
+        _deleteHandlerMock.Verify(h => h.Handle(
+            It.Is<DeleteTaskCommand>(c =>
+                c.Id == taskId &&
+                c.UserId == userId),
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteTask_ShouldReturn404_WhenTaskNotFound()
+    {
+        // Arrange
+        var taskId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+
+        _deleteHandlerMock
+            .Setup(h => h.Handle(It.IsAny<DeleteTaskCommand>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new NotFoundException($"Task with ID {taskId} not found"));
+
+        // Act
+        var result = await _controller.DeleteTask(taskId, userId);
+
+        // Assert
+        result.Should().BeOfType<NotFoundObjectResult>();
+        var notFoundResult = result as NotFoundObjectResult;
+        notFoundResult!.Value.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task DeleteTask_ShouldReturn403_WhenUserIsNotOwner()
+    {
+        // Arrange
+        var taskId = Guid.NewGuid();
+        var ownerId = Guid.NewGuid();
+        var differentUserId = Guid.NewGuid();
+
+        _deleteHandlerMock
+            .Setup(h => h.Handle(It.IsAny<DeleteTaskCommand>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new ForbiddenException($"User {differentUserId} is not authorized to delete task {taskId}"));
+
+        // Act
+        var result = await _controller.DeleteTask(taskId, differentUserId);
+
+        // Assert
+        result.Should().BeOfType<ObjectResult>();
+        var objectResult = result as ObjectResult;
+        objectResult!.StatusCode.Should().Be(403);
+        objectResult.Value.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task DeleteTask_ShouldCallHandler_WithCorrectCommand()
+    {
+        // Arrange
+        var taskId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+
+        DeleteTaskCommand? capturedCommand = null;
+        _deleteHandlerMock
+            .Setup(h => h.Handle(It.IsAny<DeleteTaskCommand>(), It.IsAny<CancellationToken>()))
+            .Callback<DeleteTaskCommand, CancellationToken>((cmd, ct) => capturedCommand = cmd)
+            .Returns(Task.CompletedTask);
+
+        // Act
+        await _controller.DeleteTask(taskId, userId);
+
+        // Assert
+        capturedCommand.Should().NotBeNull();
+        capturedCommand!.Id.Should().Be(taskId);
         capturedCommand.UserId.Should().Be(userId);
     }
 }

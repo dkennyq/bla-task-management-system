@@ -422,7 +422,7 @@ apps/tasks-api/tests/TasksApi.WebApi.Tests/Controllers/TasksControllerTests.cs (
 **Technical Details:**
 - Endpoint: `DELETE /api/tasks/{id}`
 - Response: 204 No Content
-- Status: 🔲 **PENDING**
+- Status: ✅ **COMPLETED**
 
 ---
 

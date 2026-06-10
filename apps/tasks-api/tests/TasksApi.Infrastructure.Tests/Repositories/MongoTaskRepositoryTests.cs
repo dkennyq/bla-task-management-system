@@ -227,4 +227,73 @@ public class MongoTaskRepositoryTests : IAsyncLifetime
         // Assert
         result.Should().BeNull();
     }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldReturnTrue_WhenTaskExists()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var task = new TaskEntity(
+            Guid.NewGuid(),
+            "Task to Delete",
+            "This task will be deleted",
+            TaskEntityStatus.Pending,
+            TaskPriority.Low,
+            DateTime.UtcNow.AddDays(5),
+            userId
+        );
+
+        await _repository.CreateAsync(task);
+
+        // Act
+        var result = await _repository.DeleteAsync(task.Id);
+
+        // Assert
+        result.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldReturnFalse_WhenTaskNotFound()
+    {
+        // Arrange
+        var nonExistentId = Guid.NewGuid();
+
+        // Act
+        var result = await _repository.DeleteAsync(nonExistentId);
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldPermanentlyRemoveTask_FromDatabase()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var task = new TaskEntity(
+            Guid.NewGuid(),
+            "Task to Delete Permanently",
+            "This task will be permanently removed",
+            TaskEntityStatus.Pending,
+            TaskPriority.Medium,
+            DateTime.UtcNow.AddDays(3),
+            userId
+        );
+
+        await _repository.CreateAsync(task);
+
+        // Verify task exists before deletion
+        var taskBeforeDelete = await _repository.GetByIdAsync(task.Id);
+        taskBeforeDelete.Should().NotBeNull();
+
+        // Act
+        var deleteResult = await _repository.DeleteAsync(task.Id);
+
+        // Assert
+        deleteResult.Should().BeTrue();
+
+        // Verify task no longer exists in database
+        var taskAfterDelete = await _repository.GetByIdAsync(task.Id);
+        taskAfterDelete.Should().BeNull();
+    }
 }

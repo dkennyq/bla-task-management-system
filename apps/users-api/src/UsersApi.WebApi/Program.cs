@@ -68,7 +68,7 @@ builder.Services.AddAuthentication(options =>
 
 // PostgreSQL configuration
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? "Host=postgres;Port=5432;Database=usersdb;Username=postgres;Password=postgres";
+    ?? "Host=localhost;Port=5432;Database=usersdb;Username=admin;Password=admin123;Include Error Detail=true";
 
 // Register dependencies
 builder.Services.AddScoped<IUserRepository>(sp =>

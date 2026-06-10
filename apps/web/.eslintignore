@@ -1,0 +1,20 @@
+# Build outputs
+dist
+coverage
+.vite
+
+# Dependencies
+node_modules
+
+# Config files are already handled in eslint.config.js
+# but this file is here for editor integrations
+*.config.js
+*.config.ts
+
+# Test snapshots
+**/__snapshots__
+
+# Environment files
+.env
+.env.local
+.env.*.local

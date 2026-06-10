@@ -4,7 +4,7 @@
 
 Your project has been successfully initialized locally at:
 ```
-C:\Users\devke\source\task-management-system
+C:\Users\devke\source\bla-task-management-system
 ```
 
 Git repository is initialized with an initial commit.
@@ -22,8 +22,8 @@ If you have GitHub CLI installed:
 gh auth login
 
 # Create repository
-cd C:\Users\devke\source\task-management-system
-gh repo create task-management-system --public --source=. --remote=origin --push
+cd C:\Users\devke\source\bla-task-management-system
+gh repo create bla-task-management-system --public --source=. --remote=origin --push
 
 # Your repository will be created and pushed automatically!
 ```
@@ -34,8 +34,8 @@ gh repo create task-management-system --public --source=. --remote=origin --push
 
 1. Go to https://github.com/new
 2. Fill in the details:
-   - **Repository name**: `task-management-system`
-   - **Description**: "Modern task management system with .NET microservices, Vue.js, MongoDB, and PostgreSQL"
+   - **Repository name**: `bla-task-management-system`
+   - **Description**: "BLA Technical Interview - Task management system with .NET microservices, Vue.js, MongoDB, and PostgreSQL"
    - **Visibility**: Public (or Private if preferred)
    - ⚠️ **DO NOT** initialize with README, .gitignore, or license (we already have these)
 3. Click **"Create repository"**
@@ -46,7 +46,7 @@ After creating the repository, GitHub will show you commands. Use these:
 
 ```powershell
 # Navigate to your project
-cd C:\Users\devke\source\task-management-system
+cd C:\Users\devke\source\bla-task-management-system
 
 # Add GitHub as remote origin (replace YOUR_USERNAME)
 git remote add origin https://github.com/YOUR_USERNAME/task-management-system.git

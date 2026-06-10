@@ -65,7 +65,7 @@ reset-db: ## Reset databases (WARNING: deletes all data)
 
 install: ## Install all dependencies
 	@echo "Installing .NET dependencies..."
-	dotnet restore TaskManagement.sln
+	dotnet restore BlaTaskManagement.sln
 	@echo "Installing Node.js dependencies..."
 	cd apps/web && npm install
 	@echo "✅ All dependencies installed!"

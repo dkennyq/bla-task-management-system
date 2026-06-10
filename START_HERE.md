@@ -1,8 +1,8 @@
 # 🎉 Project Successfully Initialized!
 
-Your **Task Management System** has been set up at:
+Your **BLA Task Management System** has been set up at:
 ```
-C:\Users\devke\source\task-management-system
+C:\Users\devke\source\bla-task-management-system
 ```
 
 ## ✅ What Has Been Created
@@ -97,21 +97,21 @@ docker-compose --version
 gh auth login
 
 # Create and push repository
-cd C:\Users\devke\source\task-management-system
-gh repo create task-management-system --public --source=. --remote=origin --push
+cd C:\Users\devke\source\bla-task-management-system
+gh repo create bla-task-management-system --public --source=. --remote=origin --push
 ```
 
 **Option B: Using GitHub Web Interface**
 1. Go to https://github.com/new
-2. Repository name: `task-management-system`
-3. Description: "Modern task management system with .NET microservices, Vue.js, MongoDB, and PostgreSQL"
+2. Repository name: `bla-task-management-system`
+3. Description: "BLA Technical Interview - Task management system with .NET microservices, Vue.js, MongoDB, and PostgreSQL"
 4. Choose Public or Private
 5. **DO NOT** initialize with README (we already have one)
 6. Click "Create repository"
 7. Run these commands:
    ```powershell
-   cd C:\Users\devke\source\task-management-system
-   git remote add origin https://github.com/YOUR_USERNAME/task-management-system.git
+   cd C:\Users\devke\source\bla-task-management-system
+   git remote add origin https://github.com/YOUR_USERNAME/bla-task-management-system.git
    git branch -M main
    git push -u origin main
    ```
@@ -120,7 +120,7 @@ gh repo create task-management-system --public --source=. --remote=origin --push
 1. Download from https://desktop.github.com/
 2. Open GitHub Desktop
 3. File → Add Local Repository
-4. Select: `C:\Users\devke\source\task-management-system`
+4. Select: `C:\Users\devke\source\bla-task-management-system`
 5. Click "Publish repository"
 6. Choose visibility and click "Publish"
 
@@ -130,7 +130,7 @@ gh repo create task-management-system --public --source=. --remote=origin --push
 
 ```powershell
 # Navigate to project directory
-cd C:\Users\devke\source\task-management-system
+cd C:\Users\devke\source\bla-task-management-system
 
 # Start all services (first time will download images - may take 5-10 minutes)
 docker-compose up -d

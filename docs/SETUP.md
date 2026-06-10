@@ -1,6 +1,6 @@
 # Setup Guide
 
-This guide covers how to set up the Task Management System locally with or without Docker.
+This guide covers how to set up the BLA Task Management System locally with or without Docker.
 
 ## 📋 Table of Contents
 

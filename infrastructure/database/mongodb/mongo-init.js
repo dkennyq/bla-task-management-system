@@ -1,47 +1,49 @@
-# MongoDB Initialization Script
-# This script runs when the MongoDB container is first created
+//  MongoDB Initialization Script
+//  This script runs when the MongoDB container is first created
 
-print('🚀 Starting MongoDB initialization for tasksdb...');
+print("🚀 Starting MongoDB initialization for tasksdb...");
 
 // Switch to tasksdb database
-db = db.getSiblingDB('tasksdb');
+db = db.getSiblingDB("tasksdb");
 
 // Create collections
-db.createCollection('tasks');
+db.createCollection("tasks");
 
-print('✅ Created tasks collection');
+print("✅ Created tasks collection");
 
 // Create indexes
-db.tasks.createIndex({ "userId": 1 });
-db.tasks.createIndex({ "status": 1 });
-db.tasks.createIndex({ "dueDate": 1 });
-db.tasks.createIndex({ "createdAt": -1 });
+db.tasks.createIndex({ userId: 1 });
+db.tasks.createIndex({ status: 1 });
+db.tasks.createIndex({ dueDate: 1 });
+db.tasks.createIndex({ createdAt: -1 });
 
-print('✅ Created indexes on tasks collection');
+print("✅ Created indexes on tasks collection");
 
 // Insert seed data
 const seedTasks = [
   {
     id: UUID(),
     title: "Setup Development Environment",
-    description: "Install all necessary tools and configure the development environment",
+    description:
+      "Install all necessary tools and configure the development environment",
     status: "Completed",
     priority: "High",
     dueDate: new Date("2026-06-01"),
     userId: "00000000-0000-0000-0000-000000000001", // Will match seeded user
     createdAt: new Date("2026-05-25"),
-    updatedAt: new Date("2026-06-01")
+    updatedAt: new Date("2026-06-01"),
   },
   {
     id: UUID(),
     title: "Implement User Authentication",
-    description: "Create JWT-based authentication system with login and register endpoints",
+    description:
+      "Create JWT-based authentication system with login and register endpoints",
     status: "InProgress",
     priority: "High",
     dueDate: new Date("2026-06-15"),
     userId: "00000000-0000-0000-0000-000000000001",
     createdAt: new Date("2026-06-05"),
-    updatedAt: new Date("2026-06-09")
+    updatedAt: new Date("2026-06-09"),
   },
   {
     id: UUID(),
@@ -52,7 +54,7 @@ const seedTasks = [
     dueDate: new Date("2026-06-20"),
     userId: "00000000-0000-0000-0000-000000000001",
     createdAt: new Date("2026-06-08"),
-    updatedAt: new Date("2026-06-08")
+    updatedAt: new Date("2026-06-08"),
   },
   {
     id: UUID(),
@@ -63,7 +65,7 @@ const seedTasks = [
     dueDate: new Date("2026-06-25"),
     userId: "00000000-0000-0000-0000-000000000001",
     createdAt: new Date("2026-06-09"),
-    updatedAt: new Date("2026-06-09")
+    updatedAt: new Date("2026-06-09"),
   },
   {
     id: UUID(),
@@ -74,11 +76,11 @@ const seedTasks = [
     dueDate: new Date("2026-06-30"),
     userId: "00000000-0000-0000-0000-000000000001",
     createdAt: new Date("2026-06-09"),
-    updatedAt: new Date("2026-06-09")
-  }
+    updatedAt: new Date("2026-06-09"),
+  },
 ];
 
 db.tasks.insertMany(seedTasks);
 
-print('✅ Inserted ' + seedTasks.length + ' seed tasks');
-print('🎉 MongoDB initialization completed successfully!');
+print("✅ Inserted " + seedTasks.length + " seed tasks");
+print("🎉 MongoDB initialization completed successfully!");

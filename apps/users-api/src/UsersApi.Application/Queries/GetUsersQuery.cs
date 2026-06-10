@@ -1,0 +1,7 @@
+namespace UsersApi.Application.Queries;
+
+public class GetUsersQuery
+{
+    public int Page { get; set; } = 1;
+    public int PageSize { get; set; } = 10;
+}

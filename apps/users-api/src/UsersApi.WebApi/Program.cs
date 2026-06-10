@@ -99,6 +99,7 @@ builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IRegisterUserCommandHandler, RegisterUserCommandHandler>();
 builder.Services.AddScoped<IGetCurrentUserQueryHandler, GetCurrentUserQueryHandler>();
+builder.Services.AddScoped<IGetUsersQueryHandler, GetUsersQueryHandler>();
 
     // CORS (for development)
     builder.Services.AddCors(options =>

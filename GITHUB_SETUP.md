@@ -49,7 +49,7 @@ After creating the repository, GitHub will show you commands. Use these:
 cd C:\Users\devke\source\bla-task-management-system
 
 # Add GitHub as remote origin (replace YOUR_USERNAME)
-git remote add origin https://github.com/YOUR_USERNAME/task-management-system.git
+git remote add origin https://github.com/YOUR_USERNAME/bla-task-management-system.git
 
 # Rename branch to main (GitHub's default)
 git branch -M main
@@ -60,14 +60,14 @@ git push -u origin main
 
 **If using SSH instead of HTTPS:**
 ```powershell
-git remote add origin git@github.com:YOUR_USERNAME/task-management-system.git
+git remote add origin git@github.com:YOUR_USERNAME/bla-task-management-system.git
 git branch -M main
 git push -u origin main
 ```
 
 #### Step 3: Verify Upload
 
-1. Go to your GitHub repository: `https://github.com/YOUR_USERNAME/task-management-system`
+1. Go to your GitHub repository: `https://github.com/YOUR_USERNAME/bla-task-management-system`
 2. You should see all your files and the README
 3. The README will be displayed on the homepage
 
@@ -76,7 +76,7 @@ git push -u origin main
 1. Download [GitHub Desktop](https://desktop.github.com/)
 2. Open GitHub Desktop
 3. File → Add Local Repository
-4. Select: `C:\Users\devke\source\task-management-system`
+4. Select: `C:\Users\devke\source\bla-task-management-system`
 5. Click "Publish repository"
 6. Choose name, description, and visibility
 7. Click "Publish Repository"
@@ -190,7 +190,7 @@ psql --version
 
 ```powershell
 # Navigate to project
-cd C:\Users\devke\source\task-management-system
+cd C:\Users\devke\source\bla-task-management-system
 
 # Start all services (first time will download images)
 docker-compose up -d

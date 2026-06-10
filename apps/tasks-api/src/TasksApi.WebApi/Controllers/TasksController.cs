@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TasksApi.Application.Commands;
 using TasksApi.Application.Exceptions;
@@ -7,6 +9,7 @@ using TasksApi.WebApi.DTOs;
 
 namespace TasksApi.WebApi.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class TasksController : ControllerBase
@@ -31,19 +34,27 @@ public class TasksController : ControllerBase
         _deleteCommandHandler = deleteCommandHandler;
     }
 
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<TaskEntity>>> GetAllTasks([FromQuery] Guid userId)
+    private Guid GetUserId()
     {
-        if (userId == Guid.Empty)
-        {
-            return BadRequest(new { message = "UserId is required and cannot be empty" });
-        }
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userIdClaim is null || !Guid.TryParse(userIdClaim, out var userId))
+            throw new UnauthorizedAccessException("Invalid token: userId not found");
+        return userId;
+    }
 
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<TaskEntity>>> GetAllTasks()
+    {
         try
         {
+            var userId = GetUserId();
             var query = new GetAllTasksQuery(userId);
             var tasks = await _queryHandler.Handle(query, CancellationToken.None);
             return Ok(tasks);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
         }
         catch (ArgumentException ex)
         {
@@ -56,13 +67,14 @@ public class TasksController : ControllerBase
     {
         try
         {
+            var userId = GetUserId();
             var command = new CreateTaskCommand
             {
                 Title = request.Title,
                 Description = request.Description,
                 Priority = request.Priority,
                 DueDate = request.DueDate,
-                UserId = request.UserId
+                UserId = userId
             };
 
             var createdTask = await _createCommandHandler.Handle(command, CancellationToken.None);
@@ -73,6 +85,10 @@ public class TasksController : ControllerBase
                 createdTask
             );
         }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
+        }
         catch (ArgumentException ex)
         {
             return BadRequest(new { message = ex.Message });
@@ -80,23 +96,23 @@ public class TasksController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<TaskEntity>> GetTaskById(Guid id, [FromQuery] Guid userId)
+    public async Task<ActionResult<TaskEntity>> GetTaskById(Guid id)
     {
         if (id == Guid.Empty)
         {
             return BadRequest(new { message = "Id is required and cannot be empty" });
         }
 
-        if (userId == Guid.Empty)
-        {
-            return BadRequest(new { message = "UserId is required and cannot be empty" });
-        }
-
         try
         {
+            var userId = GetUserId();
             var query = new GetTaskByIdQuery(id, userId);
             var task = await _getByIdQueryHandler.Handle(query, CancellationToken.None);
             return Ok(task);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
         }
         catch (NotFoundException ex)
         {
@@ -113,10 +129,11 @@ public class TasksController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<TaskEntity>> UpdateTask(Guid id, [FromBody] UpdateTaskRequest request, [FromQuery] Guid userId)
+    public async Task<ActionResult<TaskEntity>> UpdateTask(Guid id, [FromBody] UpdateTaskRequest request)
     {
         try
         {
+            var userId = GetUserId();
             var command = new UpdateTaskCommand
             {
                 Id = id,
@@ -131,6 +148,10 @@ public class TasksController : ControllerBase
             var updatedTask = await _updateCommandHandler.Handle(command, CancellationToken.None);
             
             return Ok(updatedTask);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
         }
         catch (NotFoundException ex)
         {
@@ -147,10 +168,11 @@ public class TasksController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<ActionResult> DeleteTask(Guid id, [FromQuery] Guid userId)
+    public async Task<ActionResult> DeleteTask(Guid id)
     {
         try
         {
+            var userId = GetUserId();
             var command = new DeleteTaskCommand
             {
                 Id = id,
@@ -160,6 +182,10 @@ public class TasksController : ControllerBase
             await _deleteCommandHandler.Handle(command, CancellationToken.None);
             
             return NoContent();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
         }
         catch (NotFoundException ex)
         {

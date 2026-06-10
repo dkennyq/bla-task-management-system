@@ -62,6 +62,8 @@ services:
       - Jwt__Audience=TaskManagementApp
       - Jwt__ExpirationMinutes=60
       - CORS__AllowedOrigins__0=http://localhost:3000
+      - Serilog__WriteTo__1__Name=Seq
+      - Serilog__WriteTo__1__Args__serverUrl=http://seq:5341
     depends_on:
       mongodb:
         condition: service_healthy
@@ -86,9 +88,27 @@ services:
       - Jwt__Audience=TaskManagementApp
       - Jwt__ExpirationMinutes=60
       - CORS__AllowedOrigins__0=http://localhost:3000
+      - Serilog__WriteTo__1__Name=Seq
+      - Serilog__WriteTo__1__Args__serverUrl=http://seq:5341
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - app-network
+
+  # Seq - Centralized Log Server
+  seq:
+    image: datalust/seq:latest
+    container_name: seq
+    restart: unless-stopped
+    ports:
+      - "5341:5341"
+      - "8081:80"
+    environment:
+      - ACCEPT_EULA=Y
+      - SEQ_FIRSTRUN_NOAUTHENTICATION=true
+    volumes:
+      - seq-data:/data
     networks:
       - app-network
 
@@ -118,6 +138,8 @@ volumes:
   mongo-data:
     driver: local
   postgres-data:
+    driver: local
+  seq-data:
     driver: local
 
 networks:

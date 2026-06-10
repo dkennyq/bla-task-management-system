@@ -14,7 +14,4 @@ public class CreateTaskRequest
     public TaskPriority Priority { get; set; } = TaskPriority.Medium;
 
     public DateTime? DueDate { get; set; }
-
-    [Required(ErrorMessage = "UserId is required")]
-    public Guid UserId { get; set; }
 }

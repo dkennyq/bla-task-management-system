@@ -22,6 +22,7 @@ var mongoDatabaseName = builder.Configuration.GetValue<string>("MongoDB:Database
 builder.Services.AddScoped<ITaskRepository>(sp => 
     new MongoTaskRepository(mongoConnectionString, mongoDatabaseName));
 builder.Services.AddScoped<GetAllTasksQueryHandler>();
+builder.Services.AddScoped<GetTaskByIdQueryHandler>();
 builder.Services.AddScoped<ICreateTaskCommandHandler, CreateTaskCommandHandler>();
 builder.Services.AddScoped<IUpdateTaskCommandHandler, UpdateTaskCommandHandler>();
 builder.Services.AddScoped<IDeleteTaskCommandHandler, DeleteTaskCommandHandler>();

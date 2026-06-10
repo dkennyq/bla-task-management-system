@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace UsersApi.Application.DTOs;
+namespace UsersApi.Application.Commands;
 
-public class RegisterRequest
+public class RegisterUserCommand
 {
     [Required(ErrorMessage = "Username is required")]
     [StringLength(50, MinimumLength = 3, ErrorMessage = "Username must be between 3 and 50 characters")]

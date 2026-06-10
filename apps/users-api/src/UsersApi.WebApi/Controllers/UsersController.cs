@@ -1,7 +1,9 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using UsersApi.Application.Commands;
 using UsersApi.Application.DTOs;
+using UsersApi.Application.Exceptions;
 using UsersApi.Application.Services;
 
 namespace UsersApi.WebApi.Controllers;
@@ -11,23 +13,29 @@ namespace UsersApi.WebApi.Controllers;
 public class UsersController : ControllerBase
 {
     private readonly IAuthService _authService;
+    private readonly IRegisterUserCommandHandler _registerHandler;
 
-    public UsersController(IAuthService authService)
+    public UsersController(IAuthService authService, IRegisterUserCommandHandler registerHandler)
     {
         _authService = authService;
+        _registerHandler = registerHandler;
     }
 
     [HttpPost("register")]
-    public async Task<ActionResult<LoginResponse>> Register([FromBody] RegisterRequest request)
+    public async Task<ActionResult<UserDto>> Register([FromBody] RegisterUserCommand command)
     {
         try
         {
-            var response = await _authService.RegisterAsync(request);
+            var response = await _registerHandler.Handle(command);
             return CreatedAtAction(nameof(GetMe), null, response);
         }
-        catch (InvalidOperationException ex)
+        catch (ConflictException ex)
         {
             return Conflict(new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
     }
 

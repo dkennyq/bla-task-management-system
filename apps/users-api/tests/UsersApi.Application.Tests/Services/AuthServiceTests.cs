@@ -30,6 +30,7 @@ public class AuthServiceTests
     {
         var request = new RegisterRequest
         {
+            Username = "testuser",
             FullName = "Test User",
             Email = "test@example.com",
             Password = "Password123!"
@@ -69,6 +70,7 @@ public class AuthServiceTests
     {
         var request = new RegisterRequest
         {
+            Username = "testuser",
             FullName = "Test User",
             Email = "existing@example.com",
             Password = "Password123!"
@@ -76,7 +78,7 @@ public class AuthServiceTests
 
         _userRepoMock
             .Setup(r => r.GetByEmailAsync(request.Email, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new UserEntity(Guid.NewGuid(), "Existing", request.Email, "hash"));
+            .ReturnsAsync(new UserEntity(Guid.NewGuid(), "existing", "Existing", request.Email, "hash"));
 
         Func<Task> act = async () => await _authService.RegisterAsync(request);
 
@@ -94,7 +96,7 @@ public class AuthServiceTests
             Password = "Password123!"
         };
 
-        var user = new UserEntity(userId, "Test User", request.Email,
+        var user = new UserEntity(userId, "testuser", "Test User", request.Email,
             BCrypt.Net.BCrypt.HashPassword(request.Password));
 
         _userRepoMock
@@ -149,7 +151,7 @@ public class AuthServiceTests
             Password = "WrongPassword"
         };
 
-        var user = new UserEntity(Guid.NewGuid(), "Test User", request.Email,
+        var user = new UserEntity(Guid.NewGuid(), "testuser", "Test User", request.Email,
             BCrypt.Net.BCrypt.HashPassword("CorrectPassword"));
 
         _userRepoMock
@@ -171,7 +173,7 @@ public class AuthServiceTests
         var storedToken = new RefreshTokenEntity(
             Guid.NewGuid(), userId, refreshTokenValue, DateTime.UtcNow.AddDays(7));
 
-        var user = new UserEntity(userId, "Test User", "test@example.com", "hash");
+        var user = new UserEntity(userId, "testuser", "Test User", "test@example.com", "hash");
 
         _refreshTokenRepoMock
             .Setup(r => r.GetByTokenAsync(refreshTokenValue, It.IsAny<CancellationToken>()))

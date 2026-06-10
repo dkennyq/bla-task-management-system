@@ -30,7 +30,7 @@ public class AuthService : IAuthService
             throw new InvalidOperationException("Email is already registered");
 
         var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
-        var user = new UserEntity(Guid.NewGuid(), request.FullName, request.Email, passwordHash);
+        var user = new UserEntity(Guid.NewGuid(), request.Username, request.FullName, request.Email, passwordHash);
 
         await _userRepository.AddAsync(user, cancellationToken);
 

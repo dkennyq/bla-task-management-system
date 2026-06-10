@@ -92,6 +92,22 @@ services:
     networks:
       - app-network
 
+  # Seq - Centralized Log Server
+  seq:
+    image: datalust/seq:latest
+    container_name: seq
+    restart: unless-stopped
+    ports:
+      - "5341:5341"
+      - "8081:80"
+    environment:
+      - ACCEPT_EULA=Y
+      - SEQ_FIRSTRUN_NOAUTHENTICATION=true
+    volumes:
+      - seq-data:/data
+    networks:
+      - app-network
+
   # Vue.js Frontend (Puerto 3000)
   web:
     build:
@@ -118,6 +134,8 @@ volumes:
   mongo-data:
     driver: local
   postgres-data:
+    driver: local
+  seq-data:
     driver: local
 
 networks:

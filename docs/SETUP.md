@@ -72,8 +72,8 @@ docker-compose --version
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/task-management-system.git
-cd task-management-system
+git clone https://github.com/YOUR_USERNAME/bla-task-management-system.git
+cd bla-task-management-system
 
 # Start all services
 docker-compose up -d

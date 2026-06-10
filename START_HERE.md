@@ -367,8 +367,8 @@ docker-compose exec postgres pg_dump -U admin usersdb > backup.sql
 ## 📞 Quick Reference Card
 
 ```
-Project: Task Management System
-Location: C:\Users\devke\source\task-management-system
+Project: BLA Task Management System
+Location: C:\Users\devke\source\bla-task-management-system
 
 Services:
   • Web UI:     http://localhost:3000

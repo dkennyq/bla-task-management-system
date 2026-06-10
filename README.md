@@ -79,8 +79,8 @@ This is a technical interview exercise demonstrating:
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/task-management-system.git
-cd task-management-system
+git clone https://github.com/YOUR_USERNAME/bla-task-management-system.git
+cd bla-task-management-system
 
 # Start all services
 docker-compose up -d
@@ -110,7 +110,7 @@ See [SETUP.md](docs/SETUP.md) for detailed local development setup.
 ## 📁 Project Structure
 
 ```
-task-management-system/
+bla-task-management-system/
 ├── apps/
 │   ├── tasks-api/          # Task Management Service (MongoDB)
 │   │   ├── src/

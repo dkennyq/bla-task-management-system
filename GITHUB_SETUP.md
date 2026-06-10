@@ -297,7 +297,7 @@ docker-compose restart mongodb postgres
 ## 🎯 Project Structure Quick Reference
 
 ```
-task-management-system/
+bla-task-management-system/
 ├── apps/
 │   ├── tasks-api/      ← .NET API for tasks (MongoDB)
 │   ├── users-api/      ← .NET API for users (PostgreSQL)

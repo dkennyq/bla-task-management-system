@@ -1,0 +1,229 @@
+{
+  "info": {
+    "name": "BLA Task Management System",
+    "description": "Collection for Tasks API and Users API testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Tasks API",
+      "item": [
+        {
+          "name": "Get All Tasks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5077/api/tasks?userId={{userId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5077",
+              "path": ["api", "tasks"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}",
+                  "description": "User GUID"
+                }
+              ]
+            },
+            "description": "Get all tasks for a specific user (US-01)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Task By Id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5077/api/tasks/{{taskId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5077",
+              "path": ["api", "tasks", "{{taskId}}"]
+            },
+            "description": "Get a specific task by ID (US-06) - NOT IMPLEMENTED YET"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Task",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Implement User Authentication\",\n  \"description\": \"Create JWT-based authentication system\",\n  \"status\": \"Pending\",\n  \"dueDate\": \"2026-06-15T23:59:59Z\",\n  \"userId\": \"{{userId}}\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5077/api/tasks",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5077",
+              "path": ["api", "tasks"]
+            },
+            "description": "Create a new task (US-02) - NOT IMPLEMENTED YET"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Task",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Implement User Authentication\",\n  \"description\": \"Create JWT-based authentication system with refresh tokens\",\n  \"status\": \"InProgress\",\n  \"dueDate\": \"2026-06-20T23:59:59Z\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5077/api/tasks/{{taskId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5077",
+              "path": ["api", "tasks", "{{taskId}}"]
+            },
+            "description": "Update an existing task (US-03) - NOT IMPLEMENTED YET"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Task",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5077/api/tasks/{{taskId}}",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5077",
+              "path": ["api", "tasks", "{{taskId}}"]
+            },
+            "description": "Delete a task (US-05) - NOT IMPLEMENTED YET"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users API",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePass123!\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5078/api/users/register",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5078",
+              "path": ["api", "users", "register"]
+            },
+            "description": "Register a new user (US-07) - NOT IMPLEMENTED YET"
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePass123!\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5078/api/users/login",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5078",
+              "path": ["api", "users", "login"]
+            },
+            "description": "Login user (US-08) - NOT IMPLEMENTED YET"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current User (Me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "description": "JWT token from login"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5078/api/users/me",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5078",
+              "path": ["api", "users", "me"]
+            },
+            "description": "Get current authenticated user (US-09) - NOT IMPLEMENTED YET"
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Users (No Auth)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5078/api/users",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5078",
+              "path": ["api", "users"]
+            },
+            "description": "Get all users without authentication (US-10) - NOT IMPLEMENTED YET"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "userId",
+      "value": "00000000-0000-0000-0000-000000000001",
+      "type": "string"
+    },
+    {
+      "key": "taskId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

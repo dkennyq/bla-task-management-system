@@ -164,7 +164,11 @@ make install       # Install dependencies
 ## 📚 Documentation
 
 - [Setup Guide](docs/SETUP.md) - Detailed setup instructions
-- [User Story](docs/USER_STORY.md) - Project requirements and user story
+- [Testing APIs](docs/TESTING_APIS.md) - **🆕 How to test APIs with Postman, Swagger, and curl**
+- [User Stories](docs/USER_STORIES.md) - Project requirements and user stories (AI-agent ready)
+- [GitHub Setup](docs/GITHUB_TASKS_SETUP.md) - Using GitHub Issues/Projects as Jira
+- [GitHub Project](docs/GITHUB_PROJECT_SETUP.md) - GitHub Project board configuration
+- [Postman Collection](docs/POSTMAN_COLLECTION.json) - Pre-configured API requests
 - [Architecture](docs/ARCHITECTURE.md) - Architectural decisions and patterns
 - [API Documentation](docs/API_DOCUMENTATION.md) - API endpoints and usage
 - [GenAI Process](docs/GENAI_PROCESS.md) - AI tool usage documentation

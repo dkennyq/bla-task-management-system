@@ -145,4 +145,86 @@ public class MongoTaskRepositoryTests : IAsyncLifetime
         result.Should().HaveCount(1);
         result.First().UserId.Should().Be(user1Id);
     }
+
+    [Fact]
+    public async Task UpdateAsync_ShouldUpdateTaskInDatabase_WhenTaskExists()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var task = new TaskEntity(
+            Guid.NewGuid(),
+            "Original Title",
+            "Original Description",
+            TaskEntityStatus.Pending,
+            TaskPriority.Low,
+            DateTime.UtcNow.AddDays(5),
+            userId
+        );
+
+        await _repository.CreateAsync(task);
+
+        // Update the task
+        task.UpdateDetails("Updated Title", "Updated Description", TaskPriority.Urgent, DateTime.UtcNow.AddDays(10));
+        task.UpdateStatus(TaskEntityStatus.Completed);
+
+        // Act
+        var result = await _repository.UpdateAsync(task);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Id.Should().Be(task.Id);
+        result.Title.Should().Be("Updated Title");
+        result.Description.Should().Be("Updated Description");
+        result.Priority.Should().Be(TaskPriority.Urgent);
+        result.Status.Should().Be(TaskEntityStatus.Completed);
+        result.UserId.Should().Be(userId);
+
+        // Verify it's actually updated in the database
+        var retrievedTask = await _repository.GetByIdAsync(task.Id);
+        retrievedTask.Should().NotBeNull();
+        retrievedTask!.Title.Should().Be("Updated Title");
+        retrievedTask.Description.Should().Be("Updated Description");
+        retrievedTask.Priority.Should().Be(TaskPriority.Urgent);
+        retrievedTask.Status.Should().Be(TaskEntityStatus.Completed);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_ShouldReturnTask_WhenTaskExists()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var task = new TaskEntity(
+            Guid.NewGuid(),
+            "Test Task",
+            "Test Description",
+            TaskEntityStatus.Pending,
+            TaskPriority.Medium,
+            DateTime.UtcNow.AddDays(3),
+            userId
+        );
+
+        await _repository.CreateAsync(task);
+
+        // Act
+        var result = await _repository.GetByIdAsync(task.Id);
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.Id.Should().Be(task.Id);
+        result.Title.Should().Be(task.Title);
+        result.Description.Should().Be(task.Description);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_ShouldReturnNull_WhenTaskDoesNotExist()
+    {
+        // Arrange
+        var nonExistentId = Guid.NewGuid();
+
+        // Act
+        var result = await _repository.GetByIdAsync(nonExistentId);
+
+        // Assert
+        result.Should().BeNull();
+    }
 }

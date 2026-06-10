@@ -23,6 +23,7 @@ builder.Services.AddScoped<ITaskRepository>(sp =>
     new MongoTaskRepository(mongoConnectionString, mongoDatabaseName));
 builder.Services.AddScoped<GetAllTasksQueryHandler>();
 builder.Services.AddScoped<ICreateTaskCommandHandler, CreateTaskCommandHandler>();
+builder.Services.AddScoped<IUpdateTaskCommandHandler, UpdateTaskCommandHandler>();
 
 // CORS (for development)
 builder.Services.AddCors(options =>

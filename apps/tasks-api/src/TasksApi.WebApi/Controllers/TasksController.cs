@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using TasksApi.Application.Commands;
+using TasksApi.Application.Exceptions;
 using TasksApi.Application.Queries;
 using TasksApi.Domain.Entities;
 using TasksApi.WebApi.DTOs;
@@ -12,13 +13,16 @@ public class TasksController : ControllerBase
 {
     private readonly GetAllTasksQueryHandler _queryHandler;
     private readonly ICreateTaskCommandHandler _createCommandHandler;
+    private readonly IUpdateTaskCommandHandler _updateCommandHandler;
 
     public TasksController(
         GetAllTasksQueryHandler queryHandler, 
-        ICreateTaskCommandHandler createCommandHandler)
+        ICreateTaskCommandHandler createCommandHandler,
+        IUpdateTaskCommandHandler updateCommandHandler)
     {
         _queryHandler = queryHandler;
         _createCommandHandler = createCommandHandler;
+        _updateCommandHandler = updateCommandHandler;
     }
 
     [HttpGet]
@@ -75,5 +79,39 @@ public class TasksController : ControllerBase
         // Placeholder para cumplir con CreatedAtAction
         // Se implementará en US-06
         return NotFound();
+    }
+
+    [HttpPut("{id}")]
+    public async Task<ActionResult<TaskEntity>> UpdateTask(Guid id, [FromBody] UpdateTaskRequest request, [FromQuery] Guid userId)
+    {
+        try
+        {
+            var command = new UpdateTaskCommand
+            {
+                Id = id,
+                Title = request.Title,
+                Description = request.Description,
+                Priority = request.Priority,
+                Status = request.Status,
+                DueDate = request.DueDate,
+                UserId = userId
+            };
+
+            var updatedTask = await _updateCommandHandler.Handle(command, CancellationToken.None);
+            
+            return Ok(updatedTask);
+        }
+        catch (NotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (ForbiddenException ex)
+        {
+            return StatusCode(403, new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }

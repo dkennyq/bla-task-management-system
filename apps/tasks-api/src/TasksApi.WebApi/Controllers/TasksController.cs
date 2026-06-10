@@ -12,17 +12,20 @@ namespace TasksApi.WebApi.Controllers;
 public class TasksController : ControllerBase
 {
     private readonly GetAllTasksQueryHandler _queryHandler;
+    private readonly GetTaskByIdQueryHandler _getByIdQueryHandler;
     private readonly ICreateTaskCommandHandler _createCommandHandler;
     private readonly IUpdateTaskCommandHandler _updateCommandHandler;
     private readonly IDeleteTaskCommandHandler _deleteCommandHandler;
 
     public TasksController(
-        GetAllTasksQueryHandler queryHandler, 
+        GetAllTasksQueryHandler queryHandler,
+        GetTaskByIdQueryHandler getByIdQueryHandler,
         ICreateTaskCommandHandler createCommandHandler,
         IUpdateTaskCommandHandler updateCommandHandler,
         IDeleteTaskCommandHandler deleteCommandHandler)
     {
         _queryHandler = queryHandler;
+        _getByIdQueryHandler = getByIdQueryHandler;
         _createCommandHandler = createCommandHandler;
         _updateCommandHandler = updateCommandHandler;
         _deleteCommandHandler = deleteCommandHandler;
@@ -77,11 +80,36 @@ public class TasksController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<TaskEntity>> GetTaskById(Guid id)
+    public async Task<ActionResult<TaskEntity>> GetTaskById(Guid id, [FromQuery] Guid userId)
     {
-        // Placeholder para cumplir con CreatedAtAction
-        // Se implementará en US-06
-        return NotFound();
+        if (id == Guid.Empty)
+        {
+            return BadRequest(new { message = "Id is required and cannot be empty" });
+        }
+
+        if (userId == Guid.Empty)
+        {
+            return BadRequest(new { message = "UserId is required and cannot be empty" });
+        }
+
+        try
+        {
+            var query = new GetTaskByIdQuery(id, userId);
+            var task = await _getByIdQueryHandler.Handle(query, CancellationToken.None);
+            return Ok(task);
+        }
+        catch (NotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (ForbiddenException ex)
+        {
+            return StatusCode(403, new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPut("{id}")]

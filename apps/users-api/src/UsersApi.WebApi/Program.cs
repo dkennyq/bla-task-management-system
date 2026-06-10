@@ -73,6 +73,8 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 // Register dependencies
 builder.Services.AddScoped<IUserRepository>(sp =>
     new UserRepository(connectionString));
+builder.Services.AddScoped<IRefreshTokenRepository>(sp =>
+    new RefreshTokenRepository(connectionString));
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 

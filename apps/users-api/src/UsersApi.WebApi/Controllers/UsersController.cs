@@ -45,6 +45,20 @@ public class UsersController : ControllerBase
         }
     }
 
+    [HttpPost("refresh")]
+    public async Task<ActionResult<LoginResponse>> RefreshToken([FromBody] RefreshTokenRequest request)
+    {
+        try
+        {
+            var response = await _authService.RefreshTokenAsync(request);
+            return Ok(response);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
+        }
+    }
+
     [Authorize]
     [HttpGet("me")]
     public async Task<ActionResult<LoginResponse>> GetMe()
@@ -60,6 +74,7 @@ public class UsersController : ControllerBase
             Email = User.FindFirst(ClaimTypes.Email)?.Value ?? string.Empty,
             FullName = User.FindFirst(ClaimTypes.Name)?.Value ?? string.Empty,
             Token = string.Empty,
+            RefreshToken = string.Empty,
             ExpiresAt = DateTime.MinValue
         });
     }

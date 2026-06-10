@@ -1,0 +1,125 @@
+version: '3.8'
+
+services:
+  # MongoDB para Tasks API
+  mongodb:
+    image: mongo:7
+    container_name: tasks-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: tasksdb
+    volumes:
+      - mongo-data:/data/db
+      - ./infrastructure/database/mongodb:/docker-entrypoint-initdb.d:ro
+    networks:
+      - app-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/tasksdb --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL para Users API
+  postgres:
+    image: postgres:16-alpine
+    container_name: users-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: usersdb
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./infrastructure/database/postgres:/docker-entrypoint-initdb.d:ro
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d usersdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Tasks API (Puerto 5001)
+  tasks-api:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/tasks-api.Dockerfile
+    container_name: tasks-api
+    restart: unless-stopped
+    ports:
+      - "5001:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - MongoDB__ConnectionString=mongodb://mongodb:27017
+      - MongoDB__DatabaseName=tasksdb
+      - Jwt__Secret=your-super-secret-jwt-key-change-this-in-production-min-32-chars
+      - Jwt__Issuer=TaskManagementSystem
+      - Jwt__Audience=TaskManagementApp
+      - Jwt__ExpirationMinutes=60
+      - CORS__AllowedOrigins__0=http://localhost:3000
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  # Users API (Puerto 5002)
+  users-api:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/users-api.Dockerfile
+    container_name: users-api
+    restart: unless-stopped
+    ports:
+      - "5002:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - Postgres__ConnectionString=Host=postgres;Port=5432;Database=usersdb;Username=admin;Password=admin123;Include Error Detail=true
+      - Jwt__Secret=your-super-secret-jwt-key-change-this-in-production-min-32-chars
+      - Jwt__Issuer=TaskManagementSystem
+      - Jwt__Audience=TaskManagementApp
+      - Jwt__ExpirationMinutes=60
+      - CORS__AllowedOrigins__0=http://localhost:3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  # Vue.js Frontend (Puerto 3000)
+  web:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/web.Dockerfile
+      target: development
+    container_name: web-ui
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_TASKS_API_URL=http://localhost:5001
+      - VITE_USERS_API_URL=http://localhost:5002
+    volumes:
+      - ./apps/web:/app
+      - /app/node_modules
+    depends_on:
+      - tasks-api
+      - users-api
+    networks:
+      - app-network
+
+volumes:
+  mongo-data:
+    driver: local
+  postgres-data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge

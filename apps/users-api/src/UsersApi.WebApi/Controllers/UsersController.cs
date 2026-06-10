@@ -16,12 +16,14 @@ public class UsersController : ControllerBase
     private readonly IAuthService _authService;
     private readonly IRegisterUserCommandHandler _registerHandler;
     private readonly IGetCurrentUserQueryHandler _getCurrentUserHandler;
+    private readonly IGetUsersQueryHandler _getUsersHandler;
 
-    public UsersController(IAuthService authService, IRegisterUserCommandHandler registerHandler, IGetCurrentUserQueryHandler getCurrentUserHandler)
+    public UsersController(IAuthService authService, IRegisterUserCommandHandler registerHandler, IGetCurrentUserQueryHandler getCurrentUserHandler, IGetUsersQueryHandler getUsersHandler)
     {
         _authService = authService;
         _registerHandler = registerHandler;
         _getCurrentUserHandler = getCurrentUserHandler;
+        _getUsersHandler = getUsersHandler;
     }
 
     [HttpPost("register")]
@@ -68,6 +70,13 @@ public class UsersController : ControllerBase
         {
             return Unauthorized(new { message = ex.Message });
         }
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<PagedResponse<UserListItemDto>>> GetUsers([FromQuery] GetUsersQuery query)
+    {
+        var result = await _getUsersHandler.Handle(query);
+        return Ok(result);
     }
 
     [Authorize]

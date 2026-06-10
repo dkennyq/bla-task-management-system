@@ -98,6 +98,34 @@ public class UserRepository : IUserRepository
         return count > 0;
     }
 
+    public async Task<List<UserEntity>> GetAllAsync(int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        await using var connection = new NpgsqlConnection(_connectionString);
+        await connection.OpenAsync(cancellationToken);
+
+        const string sql = "SELECT id, username, full_name, email, password_hash, created_at FROM users ORDER BY username LIMIT @Limit OFFSET @Offset";
+        await using var command = new NpgsqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@Limit", pageSize);
+        command.Parameters.AddWithValue("@Offset", (page - 1) * pageSize);
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        var users = new List<UserEntity>();
+        while (await reader.ReadAsync(cancellationToken))
+            users.Add(MapReader(reader));
+        return users;
+    }
+
+    public async Task<int> GetCountAsync(CancellationToken cancellationToken = default)
+    {
+        await using var connection = new NpgsqlConnection(_connectionString);
+        await connection.OpenAsync(cancellationToken);
+
+        const string sql = "SELECT COUNT(1) FROM users";
+        await using var command = new NpgsqlCommand(sql, connection);
+
+        return Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken));
+    }
+
     public async Task AddAsync(UserEntity user, CancellationToken cancellationToken = default)
     {
         await using var connection = new NpgsqlConnection(_connectionString);

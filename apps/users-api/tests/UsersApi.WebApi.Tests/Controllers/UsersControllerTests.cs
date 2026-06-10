@@ -17,6 +17,7 @@ public class UsersControllerTests
     private readonly Mock<IAuthService> _authServiceMock;
     private readonly Mock<IRegisterUserCommandHandler> _registerHandlerMock;
     private readonly Mock<IGetCurrentUserQueryHandler> _getCurrentUserHandlerMock;
+    private readonly Mock<IGetUsersQueryHandler> _getUsersHandlerMock;
     private readonly UsersController _controller;
 
     public UsersControllerTests()
@@ -24,7 +25,8 @@ public class UsersControllerTests
         _authServiceMock = new Mock<IAuthService>();
         _registerHandlerMock = new Mock<IRegisterUserCommandHandler>();
         _getCurrentUserHandlerMock = new Mock<IGetCurrentUserQueryHandler>();
-        _controller = new UsersController(_authServiceMock.Object, _registerHandlerMock.Object, _getCurrentUserHandlerMock.Object);
+        _getUsersHandlerMock = new Mock<IGetUsersQueryHandler>();
+        _controller = new UsersController(_authServiceMock.Object, _registerHandlerMock.Object, _getCurrentUserHandlerMock.Object, _getUsersHandlerMock.Object);
     }
 
     [Fact]
@@ -283,5 +285,60 @@ public class UsersControllerTests
         var result = await _controller.GetMe();
 
         result.Result.Should().BeOfType<NotFoundObjectResult>();
+    }
+
+    [Fact]
+    public async Task GetUsers_ShouldReturn200_WithPagedResponse()
+    {
+        var query = new GetUsersQuery { Page = 1, PageSize = 10 };
+        var response = new PagedResponse<UserListItemDto>
+        {
+            Items = new List<UserListItemDto>
+            {
+                new() { Username = "alice", FullName = "Alice Smith" },
+                new() { Username = "bob", FullName = "Bob Jones" }
+            },
+            Page = 1,
+            PageSize = 10,
+            TotalCount = 2
+        };
+
+        _getUsersHandlerMock
+            .Setup(h => h.Handle(query, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(response);
+
+        var result = await _controller.GetUsers(query);
+
+        result.Result.Should().BeOfType<OkObjectResult>();
+        var okResult = result.Result as OkObjectResult;
+        var pagedResponse = okResult!.Value as PagedResponse<UserListItemDto>;
+        pagedResponse!.Items.Should().HaveCount(2);
+        pagedResponse.Items[0].Username.Should().Be("alice");
+        pagedResponse.Items[0].FullName.Should().Be("Alice Smith");
+        pagedResponse.TotalCount.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task GetUsers_ShouldCallHandler_WithQuery()
+    {
+        var query = new GetUsersQuery { Page = 2, PageSize = 5 };
+        var response = new PagedResponse<UserListItemDto>
+        {
+            Items = new List<UserListItemDto>(),
+            Page = 2,
+            PageSize = 5,
+            TotalCount = 0
+        };
+
+        _getUsersHandlerMock
+            .Setup(h => h.Handle(query, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(response);
+
+        var result = await _controller.GetUsers(query);
+
+        _getUsersHandlerMock.Verify(
+            h => h.Handle(It.Is<GetUsersQuery>(q => q.Page == 2 && q.PageSize == 5), It.IsAny<CancellationToken>()),
+            Times.Once);
+        result.Result.Should().BeOfType<OkObjectResult>();
     }
 }

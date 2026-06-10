@@ -57,6 +57,26 @@
           "response": []
         },
         {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5078/api/users?page=1&pageSize=10",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5078",
+              "path": ["api", "users"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "10" }
+              ]
+            },
+            "description": "List all registered users (public, no auth required). Returns paginated response with username, fullName only."
+          },
+          "response": []
+        },
+        {
           "name": "Login",
           "request": {
             "method": "POST",

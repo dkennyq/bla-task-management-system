@@ -1,10 +1,12 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using TasksApi.Application.Commands;
 using TasksApi.Application.Interfaces;
 using TasksApi.Application.Queries;
 using TasksApi.Domain.Entities;
 using TasksApi.WebApi.Controllers;
+using TasksApi.WebApi.DTOs;
 using Xunit;
 
 namespace TasksApi.WebApi.Tests.Controllers;
@@ -12,14 +14,16 @@ namespace TasksApi.WebApi.Tests.Controllers;
 public class TasksControllerTests
 {
     private readonly Mock<ITaskRepository> _repositoryMock;
+    private readonly Mock<ICreateTaskCommandHandler> _createHandlerMock;
     private readonly TasksController _controller;
-    private readonly GetAllTasksQueryHandler _handler;
+    private readonly GetAllTasksQueryHandler _queryHandler;
 
     public TasksControllerTests()
     {
         _repositoryMock = new Mock<ITaskRepository>();
-        _handler = new GetAllTasksQueryHandler(_repositoryMock.Object);
-        _controller = new TasksController(_handler);
+        _queryHandler = new GetAllTasksQueryHandler(_repositoryMock.Object);
+        _createHandlerMock = new Mock<ICreateTaskCommandHandler>();
+        _controller = new TasksController(_queryHandler, _createHandlerMock.Object);
     }
 
     [Fact]
@@ -94,5 +98,168 @@ public class TasksControllerTests
 
         // Assert
         result.Result.Should().BeOfType<BadRequestObjectResult>();
+    }
+
+    [Fact]
+    public async Task Create_ReturnsCreatedAtAction_WhenRequestIsValid()
+    {
+        // Arrange
+        var request = new CreateTaskRequest
+        {
+            Title = "New Task",
+            Description = "Task Description",
+            Priority = TaskPriority.High,
+            DueDate = DateTime.UtcNow.AddDays(7),
+            UserId = Guid.NewGuid()
+        };
+
+        var createdTask = new TaskEntity(
+            Guid.NewGuid(),
+            request.Title,
+            request.Description,
+            TaskEntityStatus.Pending,
+            request.Priority,
+            request.DueDate,
+            request.UserId
+        );
+
+        _createHandlerMock
+            .Setup(h => h.Handle(It.IsAny<CreateTaskCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(createdTask);
+
+        // Act
+        var result = await _controller.Create(request);
+
+        // Assert
+        result.Result.Should().BeOfType<CreatedAtActionResult>();
+        var createdAtActionResult = result.Result as CreatedAtActionResult;
+        createdAtActionResult!.ActionName.Should().Be("GetTaskById");
+        createdAtActionResult.RouteValues!["id"].Should().Be(createdTask.Id);
+        createdAtActionResult.Value.Should().BeEquivalentTo(createdTask);
+    }
+
+    [Fact]
+    public async Task Create_ReturnsBadRequest_WhenTitleIsEmpty()
+    {
+        // Arrange
+        var request = new CreateTaskRequest
+        {
+            Title = "",
+            Description = "Description",
+            Priority = TaskPriority.Medium,
+            DueDate = DateTime.UtcNow.AddDays(5),
+            UserId = Guid.NewGuid()
+        };
+
+        _createHandlerMock
+            .Setup(h => h.Handle(It.IsAny<CreateTaskCommand>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new ArgumentException("Title cannot be empty", "title"));
+
+        // Act
+        var result = await _controller.Create(request);
+
+        // Assert
+        result.Result.Should().BeOfType<BadRequestObjectResult>();
+    }
+
+    [Fact]
+    public async Task Create_ReturnsBadRequest_WhenUserIdIsEmpty()
+    {
+        // Arrange
+        var request = new CreateTaskRequest
+        {
+            Title = "Valid Title",
+            Description = "Description",
+            Priority = TaskPriority.Low,
+            DueDate = DateTime.UtcNow.AddDays(3),
+            UserId = Guid.Empty
+        };
+
+        _createHandlerMock
+            .Setup(h => h.Handle(It.IsAny<CreateTaskCommand>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new ArgumentException("UserId cannot be empty", "userId"));
+
+        // Act
+        var result = await _controller.Create(request);
+
+        // Assert
+        result.Result.Should().BeOfType<BadRequestObjectResult>();
+    }
+
+    [Fact]
+    public async Task Create_ShouldSetStatusToPending()
+    {
+        // Arrange
+        var request = new CreateTaskRequest
+        {
+            Title = "Task with Default Status",
+            Description = "Should default to Pending",
+            Priority = TaskPriority.Medium,
+            DueDate = DateTime.UtcNow.AddDays(10),
+            UserId = Guid.NewGuid()
+        };
+
+        TaskEntity? capturedTask = null;
+        _createHandlerMock
+            .Setup(h => h.Handle(It.IsAny<CreateTaskCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((CreateTaskCommand cmd, CancellationToken ct) =>
+            {
+                capturedTask = new TaskEntity(
+                    Guid.NewGuid(),
+                    cmd.Title,
+                    cmd.Description,
+                    TaskEntityStatus.Pending,
+                    cmd.Priority,
+                    cmd.DueDate,
+                    cmd.UserId
+                );
+                return capturedTask;
+            });
+
+        // Act
+        var result = await _controller.Create(request);
+
+        // Assert
+        result.Result.Should().BeOfType<CreatedAtActionResult>();
+        capturedTask.Should().NotBeNull();
+        capturedTask!.Status.Should().Be(TaskEntityStatus.Pending);
+    }
+
+    [Fact]
+    public async Task Create_WithoutOptionalFields_ShouldSucceed()
+    {
+        // Arrange
+        var request = new CreateTaskRequest
+        {
+            Title = "Minimal Task",
+            Description = null,
+            Priority = TaskPriority.Low,
+            DueDate = null,
+            UserId = Guid.NewGuid()
+        };
+
+        var createdTask = new TaskEntity(
+            Guid.NewGuid(),
+            request.Title,
+            request.Description,
+            TaskEntityStatus.Pending,
+            request.Priority,
+            request.DueDate,
+            request.UserId
+        );
+
+        _createHandlerMock
+            .Setup(h => h.Handle(It.IsAny<CreateTaskCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(createdTask);
+
+        // Act
+        var result = await _controller.Create(request);
+
+        // Assert
+        result.Result.Should().BeOfType<CreatedAtActionResult>();
+        var createdAtActionResult = result.Result as CreatedAtActionResult;
+        var returnedTask = createdAtActionResult!.Value as TaskEntity;
+        returnedTask!.Description.Should().BeNull();
+        returnedTask.DueDate.Should().BeNull();
     }
 }

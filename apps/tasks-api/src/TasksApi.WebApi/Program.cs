@@ -1,3 +1,4 @@
+using TasksApi.Application.Commands;
 using TasksApi.Application.Interfaces;
 using TasksApi.Application.Queries;
 using TasksApi.Infrastructure.Repositories;
@@ -21,6 +22,7 @@ var mongoDatabaseName = builder.Configuration.GetValue<string>("MongoDB:Database
 builder.Services.AddScoped<ITaskRepository>(sp => 
     new MongoTaskRepository(mongoConnectionString, mongoDatabaseName));
 builder.Services.AddScoped<GetAllTasksQueryHandler>();
+builder.Services.AddScoped<ICreateTaskCommandHandler, CreateTaskCommandHandler>();
 
 // CORS (for development)
 builder.Services.AddCors(options =>

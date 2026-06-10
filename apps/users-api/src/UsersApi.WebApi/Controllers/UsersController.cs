@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using UsersApi.Application.Commands;
 using UsersApi.Application.DTOs;
 using UsersApi.Application.Exceptions;
+using UsersApi.Application.Queries;
 using UsersApi.Application.Services;
 
 namespace UsersApi.WebApi.Controllers;
@@ -14,11 +15,13 @@ public class UsersController : ControllerBase
 {
     private readonly IAuthService _authService;
     private readonly IRegisterUserCommandHandler _registerHandler;
+    private readonly IGetCurrentUserQueryHandler _getCurrentUserHandler;
 
-    public UsersController(IAuthService authService, IRegisterUserCommandHandler registerHandler)
+    public UsersController(IAuthService authService, IRegisterUserCommandHandler registerHandler, IGetCurrentUserQueryHandler getCurrentUserHandler)
     {
         _authService = authService;
         _registerHandler = registerHandler;
+        _getCurrentUserHandler = getCurrentUserHandler;
     }
 
     [HttpPost("register")]
@@ -69,21 +72,21 @@ public class UsersController : ControllerBase
 
     [Authorize]
     [HttpGet("me")]
-    public async Task<ActionResult<LoginResponse>> GetMe()
+    public async Task<ActionResult<UserDto>> GetMe()
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (userIdClaim is null || !Guid.TryParse(userIdClaim, out var userId))
             return Unauthorized(new { message = "Invalid token" });
 
-        // User info is already in claims, return them
-        return Ok(new LoginResponse
+        try
         {
-            UserId = userId,
-            Email = User.FindFirst(ClaimTypes.Email)?.Value ?? string.Empty,
-            FullName = User.FindFirst(ClaimTypes.Name)?.Value ?? string.Empty,
-            Token = string.Empty,
-            RefreshToken = string.Empty,
-            ExpiresAt = DateTime.MinValue
-        });
+            var query = new GetCurrentUserQuery { UserId = userId };
+            var user = await _getCurrentUserHandler.Handle(query);
+            return Ok(user);
+        }
+        catch (NotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
     }
 }

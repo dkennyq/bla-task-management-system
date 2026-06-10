@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using UsersApi.Application.Exceptions;
 
 namespace UsersApi.WebApi.Middleware;
 
@@ -60,6 +61,7 @@ public class ExceptionHandlingMiddleware
         {
             ArgumentException => (HttpStatusCode.BadRequest, "ValidationError"),
             KeyNotFoundException => (HttpStatusCode.NotFound, "NotFound"),
+            NotFoundException => (HttpStatusCode.NotFound, "NotFound"),
             UnauthorizedAccessException => (HttpStatusCode.Unauthorized, "Unauthorized"),
             InvalidOperationException => (HttpStatusCode.Conflict, "Conflict"),
             _ => (HttpStatusCode.InternalServerError, "InternalServerError")

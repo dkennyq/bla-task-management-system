@@ -169,7 +169,7 @@
               "port": "5078",
               "path": ["api", "users", "me"]
             },
-            "description": "Get current authenticated user's info from JWT claims."
+            "description": "Get current authenticated user's profile from database. Returns id, username, fullName, email, createdAt."
           },
           "response": []
         }

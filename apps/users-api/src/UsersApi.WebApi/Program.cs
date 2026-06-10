@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using UsersApi.Application.Commands;
+using UsersApi.Application.Queries;
 using UsersApi.Application.Services;
 using UsersApi.Domain.Interfaces;
 using UsersApi.Infrastructure.Repositories;
@@ -97,6 +98,7 @@ builder.Services.AddScoped<IRefreshTokenRepository>(sp =>
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IRegisterUserCommandHandler, RegisterUserCommandHandler>();
+builder.Services.AddScoped<IGetCurrentUserQueryHandler, GetCurrentUserQueryHandler>();
 
     // CORS (for development)
     builder.Services.AddCors(options =>

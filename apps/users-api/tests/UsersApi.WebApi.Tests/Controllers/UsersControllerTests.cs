@@ -6,6 +6,7 @@ using Moq;
 using UsersApi.Application.Commands;
 using UsersApi.Application.DTOs;
 using UsersApi.Application.Exceptions;
+using UsersApi.Application.Queries;
 using UsersApi.Application.Services;
 using UsersApi.WebApi.Controllers;
 
@@ -15,13 +16,15 @@ public class UsersControllerTests
 {
     private readonly Mock<IAuthService> _authServiceMock;
     private readonly Mock<IRegisterUserCommandHandler> _registerHandlerMock;
+    private readonly Mock<IGetCurrentUserQueryHandler> _getCurrentUserHandlerMock;
     private readonly UsersController _controller;
 
     public UsersControllerTests()
     {
         _authServiceMock = new Mock<IAuthService>();
         _registerHandlerMock = new Mock<IRegisterUserCommandHandler>();
-        _controller = new UsersController(_authServiceMock.Object, _registerHandlerMock.Object);
+        _getCurrentUserHandlerMock = new Mock<IGetCurrentUserQueryHandler>();
+        _controller = new UsersController(_authServiceMock.Object, _registerHandlerMock.Object, _getCurrentUserHandlerMock.Object);
     }
 
     [Fact]
@@ -207,6 +210,15 @@ public class UsersControllerTests
     public async Task GetMe_ShouldReturn200_WhenAuthenticated()
     {
         var userId = Guid.NewGuid();
+        var userDto = new UserDto
+        {
+            Id = userId,
+            Username = "testuser",
+            FullName = "Test User",
+            Email = "test@example.com",
+            CreatedAt = DateTime.UtcNow
+        };
+
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
@@ -221,12 +233,16 @@ public class UsersControllerTests
             HttpContext = new DefaultHttpContext { User = principal }
         };
 
+        _getCurrentUserHandlerMock
+            .Setup(h => h.Handle(It.Is<GetCurrentUserQuery>(q => q.UserId == userId), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(userDto);
+
         var result = await _controller.GetMe();
 
         result.Result.Should().BeOfType<OkObjectResult>();
         var okResult = result.Result as OkObjectResult;
-        var response = okResult!.Value as LoginResponse;
-        response!.UserId.Should().Be(userId);
+        var response = okResult!.Value as UserDto;
+        response!.Id.Should().Be(userId);
         response.Email.Should().Be("test@example.com");
         response.FullName.Should().Be("Test User");
     }
@@ -242,5 +258,30 @@ public class UsersControllerTests
         var result = await _controller.GetMe();
 
         result.Result.Should().BeOfType<UnauthorizedObjectResult>();
+    }
+
+    [Fact]
+    public async Task GetMe_ShouldReturn404_WhenUserNotFound()
+    {
+        var userId = Guid.NewGuid();
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString())
+        };
+        var identity = new ClaimsIdentity(claims, "TestAuth");
+        var principal = new ClaimsPrincipal(identity);
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = principal }
+        };
+
+        _getCurrentUserHandlerMock
+            .Setup(h => h.Handle(It.Is<GetCurrentUserQuery>(q => q.UserId == userId), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new NotFoundException($"User with ID '{userId}' not found"));
+
+        var result = await _controller.GetMe();
+
+        result.Result.Should().BeOfType<NotFoundObjectResult>();
     }
 }

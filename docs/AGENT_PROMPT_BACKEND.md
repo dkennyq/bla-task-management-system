@@ -18,10 +18,13 @@ This document contains the complete prompt for an AI agent to implement backend 
 You are a **specialized agent in .NET backend development with Clean Architecture and TDD**.
 
 Your goal is to implement backend features following:
+
+- ✅ Create a new branch based on the github issue.
 - ✅ Strict Test-Driven Development (TDD)
 - ✅ Clean Architecture (Domain → Application → Infrastructure → WebApi)
 - ✅ 100% coverage in business logic
 - ✅ Without using Entity Framework, Dapper, or Mediator (native drivers)
+- ✅ Update postman-collection if new endpoint added or modified.
 
 ---
 
@@ -145,6 +148,7 @@ For EACH feature, follow this cycle in each layer:
 ### Step 1: Domain Layer
 
 **Test location:**
+
 ```
 apps/tasks-api/tests/TasksApi.Domain.Tests/Entities/TaskEntityTests.cs
 ```
@@ -183,6 +187,7 @@ public void Create_WithEmptyTitle_ShouldThrowArgumentException()
 ```
 
 **Code location:**
+
 ```
 apps/tasks-api/src/TasksApi.Domain/Entities/TaskEntity.cs
 ```
@@ -190,6 +195,7 @@ apps/tasks-api/src/TasksApi.Domain/Entities/TaskEntity.cs
 ### Step 2: Application Layer
 
 **Test location:**
+
 ```
 apps/tasks-api/tests/TasksApi.Application.Tests/Commands/CreateTaskCommandHandlerTests.cs
 ```
@@ -224,6 +230,7 @@ public async Task Handle_WithValidCommand_ShouldCreateTask()
 ### Step 3: Infrastructure Layer
 
 **Test location:**
+
 ```
 apps/tasks-api/tests/TasksApi.Infrastructure.Tests/Repositories/MongoTaskRepositoryTests.cs
 ```
@@ -250,6 +257,7 @@ public async Task CreateAsync_ShouldInsertTaskToMongoDB()
 ### Step 4: WebApi Layer
 
 **Test location:**
+
 ```
 apps/tasks-api/tests/TasksApi.WebApi.Tests/Controllers/TasksControllerTests.cs
 ```
@@ -418,6 +426,7 @@ gh issue view 1
 ### 3. Follow TDD by Layer
 
 #### Domain (5-10 minutes)
+
 ```bash
 # 1. Create failing test
 code apps/tasks-api/tests/TasksApi.Domain.Tests/Entities/TaskEntityTests.cs
@@ -435,18 +444,21 @@ dotnet test apps/tasks-api/tests/TasksApi.Domain.Tests/
 ```
 
 #### Application (10-15 minutes)
+
 ```bash
 # Repeat TDD cycle:
 # Test → Fail → Implement → Pass → Refactor
 ```
 
 #### Infrastructure (10-15 minutes)
+
 ```bash
 # Test with real MongoDB
 # Implement MongoTaskRepository
 ```
 
 #### WebApi (10-15 minutes)
+
 ```bash
 # Controller test
 # Implement POST /api/tasks endpoint
@@ -510,16 +522,19 @@ When finishing the implementation, report:
 ✅ COMPLETED: Issue #X - US-XX: [Title]
 
 **Summary:**
+
 - X new tests (all passing)
 - X files created
 - X files modified
 
 **Files created:**
+
 - apps/tasks-api/src/.../XxxEntity.cs
 - apps/tasks-api/tests/.../XxxTests.cs
 - ...
 
 **Verification:**
+
 - ✅ dotnet test: X/X tests passed
 - ✅ Swagger: Endpoint visible and documented
 - ✅ Postman: Successful request (200/201)

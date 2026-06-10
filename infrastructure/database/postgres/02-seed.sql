@@ -7,9 +7,10 @@
 -- Insert demo admin user
 -- Email: admin@taskmanagement.com
 -- Password: Password123!
-INSERT INTO users (id, email, password_hash, full_name, is_active, created_at, updated_at)
+INSERT INTO users (id, username, email, password_hash, full_name, is_active, created_at, updated_at)
 VALUES (
     '00000000-0000-0000-0000-000000000001',
+    'admin',
     'admin@taskmanagement.com',
     '$2a$11$xQJ7wZRJW5vKZJxKhC2wGOYz7X2xJmVZ8aQqP5mRKlZxVZ7Y8X5Ja', -- Password123!
     'Admin User',
@@ -21,9 +22,10 @@ VALUES (
 -- Insert demo regular user
 -- Email: john.doe@example.com
 -- Password: Password123!
-INSERT INTO users (id, email, password_hash, full_name, is_active, created_at, updated_at)
+INSERT INTO users (id, username, email, password_hash, full_name, is_active, created_at, updated_at)
 VALUES (
     '00000000-0000-0000-0000-000000000002',
+    'johndoe',
     'john.doe@example.com',
     '$2a$11$xQJ7wZRJW5vKZJxKhC2wGOYz7X2xJmVZ8aQqP5mRKlZxVZ7Y8X5Ja', -- Password123!
     'John Doe',
@@ -35,9 +37,10 @@ VALUES (
 -- Insert demo regular user
 -- Email: jane.smith@example.com
 -- Password: Password123!
-INSERT INTO users (id, email, password_hash, full_name, is_active, created_at, updated_at)
+INSERT INTO users (id, username, email, password_hash, full_name, is_active, created_at, updated_at)
 VALUES (
     '00000000-0000-0000-0000-000000000003',
+    'janesmith',
     'jane.smith@example.com',
     '$2a$11$xQJ7wZRJW5vKZJxKhC2wGOYz7X2xJmVZ8aQqP5mRKlZxVZ7Y8X5Ja', -- Password123!
     'Jane Smith',

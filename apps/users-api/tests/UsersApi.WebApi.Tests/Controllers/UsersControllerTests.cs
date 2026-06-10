@@ -3,7 +3,9 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using UsersApi.Application.Commands;
 using UsersApi.Application.DTOs;
+using UsersApi.Application.Exceptions;
 using UsersApi.Application.Services;
 using UsersApi.WebApi.Controllers;
 
@@ -12,39 +14,41 @@ namespace UsersApi.WebApi.Tests.Controllers;
 public class UsersControllerTests
 {
     private readonly Mock<IAuthService> _authServiceMock;
+    private readonly Mock<IRegisterUserCommandHandler> _registerHandlerMock;
     private readonly UsersController _controller;
 
     public UsersControllerTests()
     {
         _authServiceMock = new Mock<IAuthService>();
-        _controller = new UsersController(_authServiceMock.Object);
+        _registerHandlerMock = new Mock<IRegisterUserCommandHandler>();
+        _controller = new UsersController(_authServiceMock.Object, _registerHandlerMock.Object);
     }
 
     [Fact]
     public async Task Register_ShouldReturn201_WhenSuccessful()
     {
-        var request = new RegisterRequest
+        var command = new RegisterUserCommand
         {
+            Username = "testuser",
             FullName = "Test User",
             Email = "test@example.com",
             Password = "Password123!"
         };
 
-        var response = new LoginResponse
+        var response = new UserDto
         {
-            UserId = Guid.NewGuid(),
-            Email = request.Email,
-            FullName = request.FullName,
-            Token = "jwt-token",
-            RefreshToken = "refresh-token",
-            ExpiresAt = DateTime.UtcNow.AddHours(24)
+            Id = Guid.NewGuid(),
+            Username = command.Username,
+            FullName = command.FullName,
+            Email = command.Email,
+            CreatedAt = DateTime.UtcNow
         };
 
-        _authServiceMock
-            .Setup(s => s.RegisterAsync(request, It.IsAny<CancellationToken>()))
+        _registerHandlerMock
+            .Setup(h => h.Handle(command, It.IsAny<CancellationToken>()))
             .ReturnsAsync(response);
 
-        var result = await _controller.Register(request);
+        var result = await _controller.Register(command);
 
         result.Result.Should().BeOfType<CreatedAtActionResult>();
         var createdResult = result.Result as CreatedAtActionResult;
@@ -53,22 +57,63 @@ public class UsersControllerTests
     }
 
     [Fact]
-    public async Task Register_ShouldReturn409_WhenEmailTaken()
+    public async Task Register_ShouldReturn409_WhenUsernameTaken()
     {
-        var request = new RegisterRequest
+        var command = new RegisterUserCommand
         {
+            Username = "takenuser",
             FullName = "Test User",
-            Email = "existing@example.com",
+            Email = "test@example.com",
             Password = "Password123!"
         };
 
-        _authServiceMock
-            .Setup(s => s.RegisterAsync(request, It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new InvalidOperationException("Email is already registered"));
+        _registerHandlerMock
+            .Setup(h => h.Handle(command, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new ConflictException("Username 'takenuser' is already taken"));
 
-        var result = await _controller.Register(request);
+        var result = await _controller.Register(command);
 
         result.Result.Should().BeOfType<ConflictObjectResult>();
+    }
+
+    [Fact]
+    public async Task Register_ShouldReturn409_WhenEmailTaken()
+    {
+        var command = new RegisterUserCommand
+        {
+            Username = "testuser",
+            FullName = "Test User",
+            Email = "taken@example.com",
+            Password = "Password123!"
+        };
+
+        _registerHandlerMock
+            .Setup(h => h.Handle(command, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new ConflictException("Email 'taken@example.com' is already registered"));
+
+        var result = await _controller.Register(command);
+
+        result.Result.Should().BeOfType<ConflictObjectResult>();
+    }
+
+    [Fact]
+    public async Task Register_ShouldReturn400_WhenPasswordTooWeak()
+    {
+        var command = new RegisterUserCommand
+        {
+            Username = "testuser",
+            FullName = "Test User",
+            Email = "test@example.com",
+            Password = "weak"
+        };
+
+        _registerHandlerMock
+            .Setup(h => h.Handle(command, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new ArgumentException("Password must be at least 8 characters", "password"));
+
+        var result = await _controller.Register(command);
+
+        result.Result.Should().BeOfType<BadRequestObjectResult>();
     }
 
     [Fact]

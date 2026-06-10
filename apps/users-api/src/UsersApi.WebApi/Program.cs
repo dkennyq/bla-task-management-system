@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
+using UsersApi.Application.Commands;
 using UsersApi.Application.Services;
 using UsersApi.Domain.Interfaces;
 using UsersApi.Infrastructure.Repositories;
@@ -95,6 +96,7 @@ builder.Services.AddScoped<IRefreshTokenRepository>(sp =>
     new RefreshTokenRepository(connectionString));
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IRegisterUserCommandHandler, RegisterUserCommandHandler>();
 
     // CORS (for development)
     builder.Services.AddCors(options =>

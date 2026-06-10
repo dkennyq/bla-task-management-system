@@ -132,6 +132,8 @@ builder.Services.AddScoped<IGetUsersQueryHandler, GetUsersQueryHandler>();
 
     app.MapControllers();
 
+    Log.Information("Users API listening on: {Urls}", string.Join(", ", app.Urls));
+
     app.Run();
 
     return 0;

@@ -62,6 +62,8 @@ services:
       - Jwt__Audience=TaskManagementApp
       - Jwt__ExpirationMinutes=60
       - CORS__AllowedOrigins__0=http://localhost:3000
+      - Serilog__WriteTo__1__Name=Seq
+      - Serilog__WriteTo__1__Args__serverUrl=http://seq:5341
     depends_on:
       mongodb:
         condition: service_healthy
@@ -86,6 +88,8 @@ services:
       - Jwt__Audience=TaskManagementApp
       - Jwt__ExpirationMinutes=60
       - CORS__AllowedOrigins__0=http://localhost:3000
+      - Serilog__WriteTo__1__Name=Seq
+      - Serilog__WriteTo__1__Args__serverUrl=http://seq:5341
     depends_on:
       postgres:
         condition: service_healthy

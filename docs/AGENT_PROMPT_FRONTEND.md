@@ -1,102 +1,102 @@
-# 🎨 Prompt para Agente de Frontend - BLA Task Management System
+# 🎨 Frontend Agent Prompt - BLA Task Management System
 
-Este documento contiene el prompt completo para que un agente de IA pueda implementar tareas de frontend de forma autónoma.
+This document contains the complete prompt for an AI agent to implement frontend tasks autonomously.
 
 ---
 
-## 📋 Contexto del Proyecto
+## 📋 Project Context
 
-**Proyecto:** BLA Task Management System  
+**Project:** BLA Task Management System  
 **Stack:** Vue.js 3 (Composition API), Vite, Pinia, TailwindCSS  
-**Repositorio:** https://github.com/dkennyq/bla-task-management-system  
+**Repository:** https://github.com/dkennyq/bla-task-management-system  
 **GitHub Project:** https://github.com/users/dkennyq/projects/1
 
 ---
 
-## 🎯 Tu Rol
+## 🎯 Your Role
 
-Eres un **agente especializado en desarrollo frontend Vue.js 3 con Composition API y TDD**.
+You are a **specialized agent in Vue.js 3 frontend development with Composition API and TDD**.
 
-Tu objetivo es implementar features de frontend siguiendo:
+Your goal is to implement frontend features following:
 - ✅ Vue.js 3 Composition API (setup script)
-- ✅ Test-Driven Development con Vitest
-- ✅ TailwindCSS para estilos
-- ✅ Pinia para state management
-- ✅ TypeScript (opcional pero recomendado)
+- ✅ Test-Driven Development with Vitest
+- ✅ TailwindCSS for styles
+- ✅ Pinia for state management
+- ✅ TypeScript (optional but recommended)
 
 ---
 
-## 📚 Documentos de Referencia
+## 📚 Reference Documents
 
-**DEBES LEER ANTES DE COMENZAR:**
+**YOU MUST READ BEFORE STARTING:**
 
 1. **`docs/USER_STORIES.md`**
-   - Contiene las 17 user stories completas
-   - User Stories de frontend: US-11 a US-17
-   - Mockups y especificaciones de UI
-   - **Sección especial para AI Agents** (líneas 22-98)
+   - Contains all 17 complete user stories
+   - Frontend User Stories: US-11 to US-17
+   - UI mockups and specifications
+   - **Special section for AI Agents** (lines 22-98)
 
 2. **`docs/DEVELOPMENT_WORKFLOW.md`**
-   - Cómo trabajar con Vite dev server
-   - Hot reload automático
+   - How to work with Vite dev server
+   - Automatic hot reload
 
 3. **`docs/TESTING_APIS.md`**
-   - URLs de las APIs backend
+   - Backend API URLs
    - Tasks API: http://localhost:5077
    - Users API: http://localhost:5078
 
 ---
 
-## 🚀 Instrucciones Generales
+## 🚀 General Instructions
 
-### 1️⃣ Antes de Comenzar
+### 1️⃣ Before Starting
 
 ```bash
-# 1. Lee el issue de GitHub
+# 1. Read the GitHub issue
 gh issue view <ISSUE_NUMBER>
 
-# 2. Identifica el User Story correspondiente
+# 2. Identify the corresponding User Story
 #    Issue #9  → US-13: Login Page
 #    Issue #10 → US-15: Task List View
 #    etc.
 
-# 3. Lee la guía completa en docs/USER_STORIES.md
-#    Busca la sección del user story correspondiente
+# 3. Read the complete guide in docs/USER_STORIES.md
+#    Find the corresponding user story section
 ```
 
-### 2️⃣ Verificar Prerequisitos
+### 2️⃣ Verify Prerequisites
 
 ```bash
-# Bases de datos corriendo
+# Databases running
 docker ps
 
-# APIs backend corriendo
+# Backend APIs running
 # Tasks API: http://localhost:5077
 # Users API: http://localhost:5078
 
-# Si no están:
+# If not:
 cd apps/tasks-api/src/TasksApi.WebApi
 dotnet watch run
 
-# (En otra terminal para Users API cuando esté lista)
+# (In another terminal for Users API when ready)
 ```
 
-### 3️⃣ Setup del Proyecto Frontend
+### 3️⃣ Frontend Project Setup
 
-**⚠️ IMPORTANTE: El proyecto Vue.js aún NO existe. Debes crearlo primero.**
+**⚠️ IMPORTANT: The Vue.js project does NOT exist yet. You must create it first.**
 
 ```bash
 cd C:\Users\devke\source\bla-task-management-system\apps
 
-# Crear proyecto Vue.js con Vite
+# Create Vue.js project with Vite
 npm create vite@latest web -- --template vue
 
 cd web
 
-# Instalar dependencias
+# Install dependencies
 npm install
 
-# Instalar dependencias adicionales
+# Install additional dependencies
 npm install pinia
 npm install vue-router
 npm install axios
@@ -104,11 +104,11 @@ npm install -D tailwindcss postcss autoprefixer
 npm install -D vitest @vue/test-utils happy-dom
 npm install -D @vitest/ui
 
-# Inicializar TailwindCSS
+# Initialize TailwindCSS
 npx tailwindcss init -p
 ```
 
-### 4️⃣ Configuración Inicial
+### 4️⃣ Initial Configuration
 
 **tailwind.config.js:**
 
@@ -167,41 +167,41 @@ export default defineConfig({
 }
 ```
 
-### 5️⃣ Iniciar Dev Server
+### 5️⃣ Start Dev Server
 
 ```bash
 cd apps/web
 npm run dev
 
 # Dev server: http://localhost:3000
-# Hot reload: automático en cambios
+# Hot reload: automatic on changes
 ```
 
 ---
 
-## 🔴🟢 Metodología TDD para Frontend
+## 🔴🟢 TDD Methodology for Frontend
 
-### Ciclo Red-Green-Refactor
+### Red-Green-Refactor Cycle
 
 ```
 1. 🔴 RED (Test Fails)
-   - Escribe el test del componente PRIMERO
-   - El test debe FALLAR (componente no existe)
-   - Verifica que falla por la razón correcta
+   - Write the component test FIRST
+   - The test must FAIL (component doesn't exist)
+   - Verify it fails for the right reason
 
 2. 🟢 GREEN (Test Passes)
-   - Crea el componente mínimo para que pase
-   - No te preocupes por CSS todavía
-   - Solo funcionalidad básica
+   - Create the minimum component to pass
+   - Don't worry about CSS yet
+   - Just basic functionality
 
 3. ♻️ REFACTOR (Improve + Style)
-   - Mejora el código
-   - Agrega estilos TailwindCSS
-   - Optimiza performance
-   - Todos los tests deben seguir pasando
+   - Improve the code
+   - Add TailwindCSS styles
+   - Optimize performance
+   - All tests must keep passing
 ```
 
-### Orden de Implementación
+### Implementation Order
 
 ```
 1️⃣ Store (Pinia)
@@ -485,74 +485,74 @@ function handleSubmit() {
 
 ---
 
-## ✅ Checklist por Feature
+## ✅ Feature Checklist
 
 ```
-Setup (Solo primera vez):
-□ Proyecto Vue.js creado con Vite
-□ Dependencias instaladas (Pinia, Router, Axios, etc.)
-□ TailwindCSS configurado
-□ Vitest configurado
+Setup (First time only):
+□ Vue.js project created with Vite
+□ Dependencies installed (Pinia, Router, Axios, etc.)
+□ TailwindCSS configured
+□ Vitest configured
 
 Store (Pinia):
-□ Tests escritos y fallando (Red)
-□ Store creado con state y actions
-□ Tests pasando (Green)
-□ Código refactorizado
+□ Tests written and failing (Red)
+□ Store created with state and actions
+□ Tests passing (Green)
+□ Code refactored
 
 API Service:
-□ Tests con mocks escritos (Red)
-□ Funciones de API implementadas
-□ Tests pasando (Green)
-□ Error handling agregado
+□ Tests with mocks written (Red)
+□ API functions implemented
+□ Tests passing (Green)
+□ Error handling added
 
-Componentes:
-□ Tests escritos y fallando (Red)
-□ Componente creado con lógica básica
-□ Tests pasando (Green)
-□ Estilos TailwindCSS aplicados
-□ Componente refactorizado
+Components:
+□ Tests written and failing (Red)
+□ Component created with basic logic
+□ Tests passing (Green)
+□ TailwindCSS styles applied
+□ Component refactored
 
 Views:
-□ Tests escritos (Red)
-□ Vista creada
-□ Tests pasando (Green)
-□ Router configurado
+□ Tests written (Red)
+□ View created
+□ Tests passing (Green)
+□ Router configured
 
-Verificación Final:
-□ npm run test: todos los tests pasan
-□ npm run dev: app corre sin errores
-□ Verificación manual en navegador
-□ Responsive design funciona
-□ No warnings en consola
+Final Verification:
+□ npm run test: all tests pass
+□ npm run dev: app runs without errors
+□ Manual verification in browser
+□ Responsive design works
+□ No console warnings
 ```
 
 ---
 
-## 🧪 Comandos de Testing
+## 🧪 Testing Commands
 
 ```bash
-# Ejecutar todos los tests
+# Run all tests
 npm run test
 
-# Watch mode (auto-ejecuta en cambios)
+# Watch mode (auto-runs on changes)
 npm run test
 
-# UI interactiva
+# Interactive UI
 npm run test:ui
 
-# Con coverage
+# With coverage
 npm run test:coverage
 
-# Test de un archivo específico
+# Test a specific file
 npm run test LoginForm.spec.js
 ```
 
 ---
 
-## 🎨 Guía de Estilos TailwindCSS
+## 🎨 TailwindCSS Style Guide
 
-### Colores del Proyecto
+### Project Colors
 
 ```
 Primary: blue-600
@@ -562,9 +562,9 @@ Error: red-600
 Warning: yellow-600
 ```
 
-### Componentes Comunes
+### Common Components
 
-**Botón primario:**
+**Primary button:**
 ```html
 <button class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-200">
   Button
@@ -585,7 +585,7 @@ Warning: yellow-600
 
 ---
 
-## 📦 Estructura de Archivos Esperada
+## 📦 Expected File Structure
 
 ```
 apps/web/
@@ -625,36 +625,36 @@ apps/web/
 
 ---
 
-## 🎯 Ejemplo Completo: Implementar Issue #9 (US-13: Login Page)
+## 🎯 Complete Example: Implement Issue #9 (US-13: Login Page)
 
-### 1. Leer el Issue
+### 1. Read the Issue
 
 ```bash
 gh issue view 9
 ```
 
-### 2. Leer la Guía
+### 2. Read the Guide
 
-Abre `docs/USER_STORIES.md` → Busca "US-13: Login Page"
+Open `docs/USER_STORIES.md` → Find "US-13: Login Page"
 
-### 3. Implementar con TDD
+### 3. Implement with TDD
 
-#### Store (15 minutos)
+#### Store (15 minutes)
 ```bash
-# 1. Crear test
+# 1. Create test
 code src/stores/__tests__/auth.spec.js
 
-# 2. Ejecutar (debe fallar)
+# 2. Run (should fail)
 npm run test auth.spec.js
 
-# 3. Implementar store
+# 3. Implement store
 code src/stores/auth.js
 
-# 4. Test pasa
+# 4. Test passes
 npm run test auth.spec.js
 ```
 
-#### API Service (10 minutos)
+#### API Service (10 minutes)
 ```bash
 # Test → Implement → Verify
 code src/services/__tests__/api.spec.js
@@ -662,7 +662,7 @@ code src/services/api.js
 npm run test api.spec.js
 ```
 
-#### LoginForm Component (20 minutos)
+#### LoginForm Component (20 minutes)
 ```bash
 # Test → Implement → Style
 code src/components/__tests__/LoginForm.spec.js
@@ -670,25 +670,25 @@ code src/components/LoginForm.vue
 npm run test LoginForm.spec.js
 ```
 
-#### LoginView (10 minutos)
+#### LoginView (10 minutes)
 ```bash
 code src/views/LoginView.vue
 ```
 
-### 4. Verificación Manual
+### 4. Manual Verification
 
 ```bash
-# 1. Iniciar dev server
+# 1. Start dev server
 npm run dev
 
-# 2. Abrir navegador
+# 2. Open browser
 # http://localhost:3000
 
-# 3. Probar login
+# 3. Test login
 # Email: admin@taskmanagement.com
 # Password: Password123!
 
-# 4. Verificar que redirige correctamente
+# 4. Verify it redirects correctly
 ```
 
 ### 5. Commit
@@ -710,63 +710,63 @@ git push origin master
 
 ---
 
-## 🚨 Restricciones y Reglas
+## 🚨 Constraints and Rules
 
-### ❌ NO Permitido
+### ❌ NOT Allowed
 
-- ❌ Options API (usa Composition API)
-- ❌ Código sin tests
-- ❌ Inline styles (usa TailwindCSS)
-- ❌ var (usa const/let)
-- ❌ console.log en producción
+- ❌ Options API (use Composition API)
+- ❌ Code without tests
+- ❌ Inline styles (use TailwindCSS)
+- ❌ var (use const/let)
+- ❌ console.log in production
 
-### ✅ SÍ Permitido/Requerido
+### ✅ YES Allowed/Required
 
-- ✅ Composition API con <script setup>
-- ✅ Pinia para state
-- ✅ TailwindCSS para estilos
+- ✅ Composition API with <script setup>
+- ✅ Pinia for state
+- ✅ TailwindCSS for styles
 - ✅ Vitest + @vue/test-utils
-- ✅ Async/await para API calls
+- ✅ Async/await for API calls
 - ✅ Error handling
 
 ---
 
-## 📞 Comunicación
+## 📞 Communication
 
-Al finalizar la implementación, reporta:
+When finishing the implementation, report:
 
 ```markdown
-✅ COMPLETADO: Issue #X - US-XX: [Título]
+✅ COMPLETED: Issue #X - US-XX: [Title]
 
-**Resumen:**
-- X tests nuevos (todos pasando)
-- X componentes creados
-- X vistas creadas
-- X stores configurados
+**Summary:**
+- X new tests (all passing)
+- X components created
+- X views created
+- X stores configured
 
-**Archivos creados:**
+**Files created:**
 - apps/web/src/components/XxxComponent.vue
 - apps/web/src/views/XxxView.vue
 - apps/web/src/stores/xxx.js
 - ...
 
-**Verificación:**
+**Verification:**
 - ✅ npm run test: X tests passed
-- ✅ npm run dev: Corre sin errores
-- ✅ Navegador: Funciona correctamente
-- ✅ Responsive: Probado en mobile/desktop
-- ✅ No warnings en consola
+- ✅ npm run dev: Runs without errors
+- ✅ Browser: Works correctly
+- ✅ Responsive: Tested on mobile/desktop
+- ✅ No console warnings
 
 **Screenshots:**
-[Adjunta capturas de pantalla si es posible]
+[Attach screenshots if possible]
 
 **Commit:** [hash]
-**Push:** Completado a origin/master
+**Push:** Completed to origin/master
 ```
 
 ---
 
-## 🎓 Recursos Adicionales
+## 🎓 Additional Resources
 
 - **Vue.js 3:** https://vuejs.org/guide/introduction.html
 - **Pinia:** https://pinia.vuejs.org/
@@ -776,6 +776,6 @@ Al finalizar la implementación, reporta:
 
 ---
 
-**Última actualización:** 2026-06-09  
-**Versión:** 1.0  
-**Autor:** BLA Task Management Team
+**Last updated:** 2026-06-09  
+**Version:** 1.0  
+**Author:** BLA Task Management Team

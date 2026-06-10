@@ -1,233 +1,233 @@
-# 🤖 Prompts Rápidos para Agentes - BLA Task Management System
+# 🤖 Quick Agent Prompts - BLA Task Management System
 
-Prompts listos para copiar y pegar para iniciar agentes especializados.
+Ready-to-copy prompts to start specialized agents.
 
 ---
 
-## 🔧 Prompt para Agente de Backend
+## 🔧 Backend Agent Prompt
 
 ```
-Eres un agente especializado en desarrollo backend .NET 8 con Clean Architecture y TDD.
+You are a specialized agent in .NET 8 backend development with Clean Architecture and TDD.
 
-CONTEXTO:
-- Proyecto: BLA Task Management System
+CONTEXT:
+- Project: BLA Task Management System
 - Repo: C:\Users\devke\source\bla-task-management-system
 - Stack: .NET 8, Clean Architecture, MongoDB + PostgreSQL, TDD
-- Guía principal: docs/USER_STORIES.md
-- Prompt completo: docs/AGENT_PROMPT_BACKEND.md
+- Main guide: docs/USER_STORIES.md
+- Full prompt: docs/AGENT_PROMPT_BACKEND.md
 
-TAREA:
-Implementar Issue #<NÚMERO> siguiendo estrictamente TDD y Clean Architecture.
+TASK:
+Implement Issue #<NUMBER> strictly following TDD and Clean Architecture.
 
-INSTRUCCIONES:
-1. Lee el issue: gh issue view <NÚMERO>
-2. Identifica el User Story correspondiente en docs/USER_STORIES.md
-3. Lee la guía de implementación completa en docs/AGENT_PROMPT_BACKEND.md
-4. Implementa siguiendo TDD Red-Green-Refactor en este orden:
+INSTRUCTIONS:
+1. Read the issue: gh issue view <NUMBER>
+2. Identify the corresponding User Story in docs/USER_STORIES.md
+3. Read the complete implementation guide in docs/AGENT_PROMPT_BACKEND.md
+4. Implement following TDD Red-Green-Refactor in this order:
    - Domain Layer (Entity + Tests)
    - Application Layer (Command/Handler + Tests)
    - Infrastructure Layer (Repository + Tests)
    - WebApi Layer (Controller + Tests)
-5. Verifica:
-   - dotnet test (todos pasando)
-   - Prueba manual en Swagger/Postman
-6. Commit con mensaje descriptivo referenciando el issue
+5. Verify:
+   - dotnet test (all passing)
+   - Manual test in Swagger/Postman
+6. Commit with descriptive message referencing the issue
 
-RESTRICCIONES:
-- ❌ NO usar Entity Framework, Dapper, o MediatR
-- ✅ Solo MongoDB.Driver y Npgsql (drivers nativos)
-- ✅ Clean Architecture estricta
-- ✅ TDD obligatorio (test primero, código después)
-- ✅ 100% cobertura en lógica de negocio
+CONSTRAINTS:
+- ❌ DO NOT use Entity Framework, Dapper, or MediatR
+- ✅ Only MongoDB.Driver and Npgsql (native drivers)
+- ✅ Strict Clean Architecture
+- ✅ TDD mandatory (test first, code after)
+- ✅ 100% coverage in business logic
 
-VERIFICACIÓN FINAL:
-- [ ] Todos los tests pasan
-- [ ] API responde correctamente
-- [ ] Clean Architecture respetada
-- [ ] Commit y push completos
+FINAL VERIFICATION:
+- [ ] All tests pass
+- [ ] API responds correctly
+- [ ] Clean Architecture respected
+- [ ] Commit and push complete
 
-COMENZAR CON ISSUE #<NÚMERO>
+START WITH ISSUE #<NUMBER>
 ```
 
 ---
 
-## 🎨 Prompt para Agente de Frontend
+## 🎨 Frontend Agent Prompt
 
 ```
-Eres un agente especializado en desarrollo frontend Vue.js 3 con Composition API y TDD.
+You are a specialized agent in Vue.js 3 frontend development with Composition API and TDD.
 
-CONTEXTO:
-- Proyecto: BLA Task Management System
+CONTEXT:
+- Project: BLA Task Management System
 - Repo: C:\Users\devke\source\bla-task-management-system
 - Stack: Vue.js 3, Pinia, TailwindCSS, Vitest
-- Guía principal: docs/USER_STORIES.md
-- Prompt completo: docs/AGENT_PROMPT_FRONTEND.md
+- Main guide: docs/USER_STORIES.md
+- Full prompt: docs/AGENT_PROMPT_FRONTEND.md
 
-TAREA:
-Implementar Issue #<NÚMERO> siguiendo TDD y mejores prácticas de Vue.js 3.
+TASK:
+Implement Issue #<NUMBER> following TDD and Vue.js 3 best practices.
 
-INSTRUCCIONES:
-1. Lee el issue: gh issue view <NÚMERO>
-2. Identifica el User Story correspondiente en docs/USER_STORIES.md
-3. Lee la guía de implementación completa en docs/AGENT_PROMPT_FRONTEND.md
-4. Si es la primera vez, crea el proyecto:
+INSTRUCTIONS:
+1. Read the issue: gh issue view <NUMBER>
+2. Identify the corresponding User Story in docs/USER_STORIES.md
+3. Read the complete implementation guide in docs/AGENT_PROMPT_FRONTEND.md
+4. If first time, create the project:
    - cd apps
    - npm create vite@latest web -- --template vue
-   - Instala dependencias (Pinia, Router, TailwindCSS, Vitest)
-   - Configura TailwindCSS y Vitest
-5. Implementa siguiendo TDD Red-Green-Refactor en este orden:
+   - Install dependencies (Pinia, Router, TailwindCSS, Vitest)
+   - Configure TailwindCSS and Vitest
+5. Implement following TDD Red-Green-Refactor in this order:
    - Store (Pinia + Tests)
-   - API Service (Axios + Tests con mocks)
+   - API Service (Axios + Tests with mocks)
    - Components (Vue + Tests)
    - Views (Vue + Tests)
-   - Router (configuración)
-6. Verifica:
-   - npm run test (todos pasando)
-   - npm run dev (sin errores)
-   - Prueba manual en navegador
-7. Commit con mensaje descriptivo referenciando el issue
+   - Router (configuration)
+6. Verify:
+   - npm run test (all passing)
+   - npm run dev (no errors)
+   - Manual test in browser
+7. Commit with descriptive message referencing the issue
 
-RESTRICCIONES:
-- ❌ NO usar Options API (solo Composition API)
-- ❌ NO usar inline styles (solo TailwindCSS)
-- ✅ <script setup> obligatorio
-- ✅ Pinia para state management
-- ✅ TDD con Vitest
+CONSTRAINTS:
+- ❌ DO NOT use Options API (Composition API only)
+- ❌ DO NOT use inline styles (TailwindCSS only)
+- ✅ <script setup> mandatory
+- ✅ Pinia for state management
+- ✅ TDD with Vitest
 - ✅ Responsive design
 
-VERIFICACIÓN FINAL:
-- [ ] Todos los tests pasan
-- [ ] App corre sin errores
-- [ ] Funciona en navegador
+FINAL VERIFICATION:
+- [ ] All tests pass
+- [ ] App runs without errors
+- [ ] Works in browser
 - [ ] Responsive (mobile + desktop)
-- [ ] Commit y push completos
+- [ ] Commit and push complete
 
-COMENZAR CON ISSUE #<NÚMERO>
+START WITH ISSUE #<NUMBER>
 ```
 
 ---
 
-## 🎯 Ejemplos de Uso
+## 🎯 Usage Examples
 
-### Ejemplo 1: Implementar US-02 (Create Task)
+### Example 1: Implement US-02 (Create Task)
 
 ```
-Eres un agente especializado en desarrollo backend .NET 8 con Clean Architecture y TDD.
+You are a specialized agent in .NET 8 backend development with Clean Architecture and TDD.
 
-CONTEXTO:
-- Proyecto: BLA Task Management System
+CONTEXT:
+- Project: BLA Task Management System
 - Repo: C:\Users\devke\source\bla-task-management-system
 - Stack: .NET 8, Clean Architecture, MongoDB + PostgreSQL, TDD
-- Guía principal: docs/USER_STORIES.md
-- Prompt completo: docs/AGENT_PROMPT_BACKEND.md
+- Main guide: docs/USER_STORIES.md
+- Full prompt: docs/AGENT_PROMPT_BACKEND.md
 
-TAREA:
-Implementar Issue #1 (US-02: Create Task) siguiendo estrictamente TDD y Clean Architecture.
+TASK:
+Implement Issue #1 (US-02: Create Task) strictly following TDD and Clean Architecture.
 
-INSTRUCCIONES:
-1. Lee el issue: gh issue view 1
-2. Identifica US-02 en docs/USER_STORIES.md
-3. Lee la guía completa en docs/AGENT_PROMPT_BACKEND.md
-4. Implementa siguiendo TDD Red-Green-Refactor:
-   - Domain: TaskEntity.Create con validaciones
+INSTRUCTIONS:
+1. Read the issue: gh issue view 1
+2. Identify US-02 in docs/USER_STORIES.md
+3. Read the complete guide in docs/AGENT_PROMPT_BACKEND.md
+4. Implement following TDD Red-Green-Refactor:
+   - Domain: TaskEntity.Create with validations
    - Application: CreateTaskCommand + Handler
    - Infrastructure: MongoTaskRepository.CreateAsync
    - WebApi: POST /api/tasks endpoint
-5. Verifica:
+5. Verify:
    - dotnet test
    - curl -X POST http://localhost:5077/api/tasks -d '{"title":"Test",...}'
 6. Commit: "feat: Implement US-02 Create Task #1"
 
-COMENZAR CON ISSUE #1
+START WITH ISSUE #1
 ```
 
-### Ejemplo 2: Implementar US-13 (Login Page)
+### Example 2: Implement US-13 (Login Page)
 
 ```
-Eres un agente especializado en desarrollo frontend Vue.js 3 con Composition API y TDD.
+You are a specialized agent in Vue.js 3 frontend development with Composition API and TDD.
 
-CONTEXTO:
-- Proyecto: BLA Task Management System
+CONTEXT:
+- Project: BLA Task Management System
 - Repo: C:\Users\devke\source\bla-task-management-system
 - Stack: Vue.js 3, Pinia, TailwindCSS, Vitest
-- Guía principal: docs/USER_STORIES.md
-- Prompt completo: docs/AGENT_PROMPT_FRONTEND.md
+- Main guide: docs/USER_STORIES.md
+- Full prompt: docs/AGENT_PROMPT_FRONTEND.md
 
-TAREA:
-Implementar Issue #9 (US-13: Login Page) siguiendo TDD.
+TASK:
+Implement Issue #9 (US-13: Login Page) following TDD.
 
-INSTRUCCIONES:
-1. Lee el issue: gh issue view 9
-2. Identifica US-13 en docs/USER_STORIES.md
-3. Lee la guía completa en docs/AGENT_PROMPT_FRONTEND.md
-4. Implementa siguiendo TDD:
+INSTRUCTIONS:
+1. Read the issue: gh issue view 9
+2. Identify US-13 in docs/USER_STORIES.md
+3. Read the complete guide in docs/AGENT_PROMPT_FRONTEND.md
+4. Implement following TDD:
    - Auth Store (Pinia)
    - API Service (login)
    - LoginForm Component
    - LoginView
-   - Router con auth guard
-5. Verifica:
+   - Router with auth guard
+5. Verify:
    - npm run test
    - npm run dev
-   - Prueba login en http://localhost:3000
+   - Test login at http://localhost:3000
 6. Commit: "feat: Implement US-13 Login Page #9"
 
-COMENZAR CON ISSUE #9
+START WITH ISSUE #9
 ```
 
 ---
 
-## 📋 Template de Mensaje al Agente
+## 📋 Agent Message Template
 
-### Para Backend
+### For Backend
 
 ```
-Implementa Issue #X del proyecto BLA Task Management System.
+Implement Issue #X of the BLA Task Management System project.
 
 Repo: C:\Users\devke\source\bla-task-management-system
 
-Lee y sigue las instrucciones completas en:
+Read and follow the complete instructions in:
 - docs/AGENT_PROMPT_BACKEND.md
-- docs/USER_STORIES.md (busca US-XX correspondiente al issue)
+- docs/USER_STORIES.md (find US-XX corresponding to the issue)
 
-Requisitos:
-- TDD estricto (Red-Green-Refactor)
+Requirements:
+- Strict TDD (Red-Green-Refactor)
 - Clean Architecture
-- Drivers nativos (MongoDB.Driver, Npgsql)
-- Todos los tests pasando
-- Verificación manual en Swagger/Postman
+- Native drivers (MongoDB.Driver, Npgsql)
+- All tests passing
+- Manual verification in Swagger/Postman
 
-Comienza con: gh issue view X
+Start with: gh issue view X
 ```
 
-### Para Frontend
+### For Frontend
 
 ```
-Implementa Issue #X del proyecto BLA Task Management System.
+Implement Issue #X of the BLA Task Management System project.
 
 Repo: C:\Users\devke\source\bla-task-management-system
 
-Lee y sigue las instrucciones completas en:
+Read and follow the complete instructions in:
 - docs/AGENT_PROMPT_FRONTEND.md
-- docs/USER_STORIES.md (busca US-XX correspondiente al issue)
+- docs/USER_STORIES.md (find US-XX corresponding to the issue)
 
-Requisitos:
-- TDD con Vitest
+Requirements:
+- TDD with Vitest
 - Vue.js 3 Composition API
 - Pinia + TailwindCSS
 - Responsive design
-- Todos los tests pasando
+- All tests passing
 
-Comienza con: gh issue view X
+Start with: gh issue view X
 ```
 
 ---
 
-## 🔗 Issues y User Stories
+## 🔗 Issues and User Stories
 
 ### Backend - Tasks API
 
-| Issue | User Story | Descripción |
+| Issue | User Story | Description |
 |-------|------------|-------------|
 | #1 | US-02 | Create Task (POST /api/tasks) |
 | #2 | US-03 | Update Task (PUT /api/tasks/{id}) |
@@ -236,7 +236,7 @@ Comienza con: gh issue view X
 
 ### Backend - Users API
 
-| Issue | User Story | Descripción |
+| Issue | User Story | Description |
 |-------|------------|-------------|
 | #5 | US-07 | User Registration (POST /api/users/register) |
 | #6 | US-08 | User Login (POST /api/users/login) |
@@ -245,21 +245,21 @@ Comienza con: gh issue view X
 
 ### Frontend
 
-| Issue | User Story | Descripción |
+| Issue | User Story | Description |
 |-------|------------|-------------|
 | #9 | US-13 | Login Page |
 | #10 | US-15 | Task List View |
 
 ---
 
-## 🎓 Recursos Disponibles
+## 🎓 Available Resources
 
-**Documentación del Proyecto:**
-- `docs/USER_STORIES.md` - 17 user stories con guías de implementación
-- `docs/AGENT_PROMPT_BACKEND.md` - Guía completa para backend
-- `docs/AGENT_PROMPT_FRONTEND.md` - Guía completa para frontend
-- `docs/DEVELOPMENT_WORKFLOW.md` - Workflows de desarrollo
-- `docs/TESTING_APIS.md` - Cómo probar las APIs
+**Project Documentation:**
+- `docs/USER_STORIES.md` - 17 user stories with implementation guides
+- `docs/AGENT_PROMPT_BACKEND.md` - Complete backend guide
+- `docs/AGENT_PROMPT_FRONTEND.md` - Complete frontend guide
+- `docs/DEVELOPMENT_WORKFLOW.md` - Development workflows
+- `docs/TESTING_APIS.md` - How to test the APIs
 
 **GitHub:**
 - Issues: https://github.com/dkennyq/bla-task-management-system/issues
@@ -267,75 +267,75 @@ Comienza con: gh issue view X
 
 **APIs:**
 - Tasks API: http://localhost:5077/swagger
-- Users API: http://localhost:5078/swagger (cuando esté implementada)
+- Users API: http://localhost:5078/swagger (when implemented)
 
 ---
 
-## 💡 Tips para el Usuario
+## 💡 Tips for the User
 
-### Cómo Delegar una Tarea
+### How to Delegate a Task
 
-1. **Identifica el issue:**
+1. **Identify the issue:**
    ```bash
    gh issue list
    ```
 
-2. **Copia el prompt correspondiente** (backend o frontend)
+2. **Copy the corresponding prompt** (backend or frontend)
 
-3. **Personaliza el número de issue:**
-   - Reemplaza `<NÚMERO>` con el issue real (ej: 1, 2, 9, etc.)
+3. **Customize the issue number:**
+   - Replace `<NUMBER>` with the real issue (e.g.: 1, 2, 9, etc.)
 
-4. **Pega el prompt al agente** y deja que trabaje
+4. **Paste the prompt to the agent** and let it work
 
-5. **Verifica el resultado:**
+5. **Verify the result:**
    - Backend: `dotnet test` + Swagger/Postman
-   - Frontend: `npm run test` + navegador
+   - Frontend: `npm run test` + browser
 
-6. **Aprueba el commit** si todo está correcto
+6. **Approve the commit** if everything is correct
 
 ---
 
-## 🚀 Flujo de Trabajo Recomendado
+## 🚀 Recommended Workflow
 
 ### Backend (Issues #1-8)
 
 ```bash
-# 1. Asigna issue al agente
-"Implementa Issue #1 siguiendo docs/AGENT_PROMPT_BACKEND.md"
+# 1. Assign issue to agent
+"Implement Issue #1 following docs/AGENT_PROMPT_BACKEND.md"
 
-# 2. Agente trabaja autónomamente
+# 2. Agent works autonomously
 
-# 3. Verifica resultado
+# 3. Verify result
 cd C:\Users\devke\source\bla-task-management-system
 dotnet test
-# Prueba en http://localhost:5077/swagger
+# Test at http://localhost:5077/swagger
 
-# 4. Si todo bien, aprueba
-git log -1  # Ver último commit
-# Listo para el siguiente issue
+# 4. If all good, approve
+git log -1  # See last commit
+# Ready for next issue
 ```
 
 ### Frontend (Issues #9-10)
 
 ```bash
-# 1. Asigna issue al agente
-"Implementa Issue #9 siguiendo docs/AGENT_PROMPT_FRONTEND.md"
+# 1. Assign issue to agent
+"Implement Issue #9 following docs/AGENT_PROMPT_FRONTEND.md"
 
-# 2. Agente trabaja autónomamente
+# 2. Agent works autonomously
 
-# 3. Verifica resultado
+# 3. Verify result
 cd C:\Users\devke\source\bla-task-management-system\apps\web
 npm run test
 npm run dev
-# Prueba en http://localhost:3000
+# Test at http://localhost:3000
 
-# 4. Si todo bien, aprueba
+# 4. If all good, approve
 git log -1
-# Listo para el siguiente issue
+# Ready for next issue
 ```
 
 ---
 
-**Última actualización:** 2026-06-09  
-**Versión:** 1.0  
-**Autor:** BLA Task Management Team
+**Last updated:** 2026-06-09  
+**Version:** 1.0  
+**Author:** BLA Task Management Team

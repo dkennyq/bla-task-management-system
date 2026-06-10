@@ -1,91 +1,91 @@
-# 🔄 Workflows de Desarrollo - BLA Task Management System
+# 🔄 Development Workflows - BLA Task Management System
 
-Este documento explica los dos workflows principales de desarrollo y cuándo usar cada uno.
-
----
-
-## 📋 Tabla de Contenidos
-
-1. [Setup Actual](#setup-actual)
-2. [Workflow 1: Desarrollo Local (Recomendado)](#workflow-1-desarrollo-local-recomendado)
-3. [Workflow 2: Todo en Docker](#workflow-2-todo-en-docker)
-4. [Comparación](#comparación)
-5. [Cuándo Usar Cada Uno](#cuándo-usar-cada-uno)
-6. [Comandos Útiles](#comandos-útiles)
+This document explains the two main development workflows and when to use each one.
 
 ---
 
-## 🎯 Setup Actual
+## 📋 Table of Contents
 
-**Estado actual del proyecto:**
+1. [Current Setup](#current-setup)
+2. [Workflow 1: Local Development (Recommended)](#workflow-1-local-development-recommended)
+3. [Workflow 2: Everything in Docker](#workflow-2-everything-in-docker)
+4. [Comparison](#comparison)
+5. [When to Use Each One](#when-to-use-each-one)
+6. [Useful Commands](#useful-commands)
+
+---
+
+## 🎯 Current Setup
+
+**Current project state:**
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│  🐳 EN DOCKER:                                      │
+│  🐳 IN DOCKER:                                      │
 │     • MongoDB (port 27017)                          │
 │     • PostgreSQL (port 5432)                        │
 │                                                      │
-│  🖥️  EN TU MÁQUINA (local):                        │
+│  🖥️  ON YOUR MACHINE (local):                      │
 │     • Tasks API (dotnet run - port 5077)           │
-│     • Proceso en segundo plano (detached)           │
+│     • Background process (detached)                 │
 │                                                      │
-│  🔲 NO INICIADAS:                                   │
+│  🔲 NOT STARTED:                                    │
 │     • Users API                                      │
 │     • Frontend (Vue.js)                             │
 └─────────────────────────────────────────────────────┘
 ```
 
-**Verificar estado:**
+**Verify status:**
 
 ```powershell
-# Ver procesos .NET
+# See .NET processes
 Get-Process -Name dotnet
 
-# Ver contenedores Docker
+# See Docker containers
 docker ps
 
-# Probar API
+# Test API
 curl http://localhost:5077/api/tasks?userId=00000000-0000-0000-0000-000000000001
 ```
 
 ---
 
-## 🏗️ Workflow 1: Desarrollo Local (Recomendado)
+## 🏗️ Workflow 1: Local Development (Recommended)
 
-### ✅ Ventajas
+### ✅ Advantages
 
-- ⚡ **Hot Reload**: Cambios se aplican automáticamente sin reiniciar
-- 🐛 **Debugging completo**: Breakpoints, inspección de variables
-- 🚀 **Rápido**: Sin rebuild de imágenes Docker
-- 🧪 **TDD-friendly**: Tests se ejecutan instantáneamente
-- 📝 **Logs claros**: Salida directa en consola
+- ⚡ **Hot Reload**: Changes apply automatically without restart
+- 🐛 **Full debugging**: Breakpoints, variable inspection
+- 🚀 **Fast**: No Docker image rebuilds
+- 🧪 **TDD-friendly**: Tests run instantly
+- 📝 **Clear logs**: Direct console output
 
-### 📝 Cómo Funciona
+### 📝 How It Works
 
-**Servicios:**
-- ✅ **Bases de datos**: En Docker (MongoDB + PostgreSQL)
-- ✅ **APIs**: En tu máquina (dotnet run o Visual Studio)
-- ✅ **Frontend**: En tu máquina (npm run dev)
+**Services:**
+- ✅ **Databases**: In Docker (MongoDB + PostgreSQL)
+- ✅ **APIs**: On your machine (dotnet run or Visual Studio)
+- ✅ **Frontend**: On your machine (npm run dev)
 
-### 🔧 Setup Inicial
+### 🔧 Initial Setup
 
-1. **Iniciar bases de datos:**
+1. **Start databases:**
 
 ```bash
 cd C:\Users\devke\source\bla-task-management-system
 docker-compose up -d mongodb postgres
 ```
 
-2. **Verificar que estén healthy:**
+2. **Verify they're healthy:**
 
 ```bash
 docker ps
-# Deberías ver: mongodb (healthy), postgres (healthy)
+# You should see: mongodb (healthy), postgres (healthy)
 ```
 
-### 💻 Opción A: Con dotnet run
+### 💻 Option A: With dotnet run
 
-**Iniciar Tasks API:**
+**Start Tasks API:**
 
 ```powershell
 cd apps/tasks-api/src/TasksApi.WebApi
@@ -93,7 +93,7 @@ $env:ASPNETCORE_ENVIRONMENT="Development"
 dotnet run
 ```
 
-**Iniciar Users API (cuando esté implementada):**
+**Start Users API (when implemented):**
 
 ```powershell
 cd apps/users-api/src/UsersApi.WebApi
@@ -101,158 +101,158 @@ $env:ASPNETCORE_ENVIRONMENT="Development"
 dotnet run
 ```
 
-### 💻 Opción B: Con Visual Studio / Rider
+### 💻 Option B: With Visual Studio / Rider
 
-1. Abre `BlaTaskManagement.sln`
-2. Configura proyectos de inicio:
-   - Click derecho en solution → **Set Startup Projects**
-   - Selecciona **Multiple startup projects**
-   - Marca: `TasksApi.WebApi` y `UsersApi.WebApi` como **Start**
-3. Presiona **F5** o click en **Run**
+1. Open `BlaTaskManagement.sln`
+2. Configure startup projects:
+   - Right-click on solution → **Set Startup Projects**
+   - Select **Multiple startup projects**
+   - Mark: `TasksApi.WebApi` and `UsersApi.WebApi` as **Start**
+3. Press **F5** or click **Run**
 
-### 🔄 Flujo de Trabajo (Desarrollo)
+### 🔄 Workflow (Development)
 
 ```
-1. Haces cambios en el código
+1. Make changes in the code
    ↓
-2. Guardas el archivo (Ctrl+S)
+2. Save the file (Ctrl+S)
    ↓
-3. Hot Reload detecta cambios (~2-5 segundos)
+3. Hot Reload detects changes (~2-5 seconds)
    ↓
-4. API se recompila automáticamente
+4. API recompiles automatically
    ↓
-5. Pruebas en Postman/Swagger
+5. Test in Postman/Swagger
    ↓
-6. Repites el ciclo
+6. Repeat the cycle
 ```
 
-**Ejemplo práctico:**
+**Practical example:**
 
 ```csharp
-// 1. Editas TasksController.cs
+// 1. Edit TasksController.cs
 [HttpPost]
 public async Task<IActionResult> Create([FromBody] CreateTaskCommand command)
 {
-    // Tu código aquí
+    // Your code here
 }
 
-// 2. Guardas
-// 3. Esperas 2-5 segundos
-// 4. Pruebas en Postman: POST /api/tasks
-// 5. Si no funciona, debuggeas con breakpoints
+// 2. Save
+// 3. Wait 2-5 seconds
+// 4. Test in Postman: POST /api/tasks
+// 5. If it doesn't work, debug with breakpoints
 ```
 
-### 🧪 Ejecutar Tests
+### 🧪 Run Tests
 
 ```bash
-# Todos los tests
+# All tests
 dotnet test
 
-# Tests de un proyecto específico
+# Tests from a specific project
 dotnet test apps/tasks-api/tests/TasksApi.Domain.Tests/
 
-# Con cobertura
+# With coverage
 dotnet test --collect:"XPlat Code Coverage"
 
-# Watch mode (re-ejecuta en cada cambio)
+# Watch mode (re-runs on each change)
 dotnet watch test
 ```
 
-### 🛑 Detener Servicios
+### 🛑 Stop Services
 
 ```powershell
-# Detener API (Ctrl+C en la consola)
-# O cerrar Visual Studio
+# Stop API (Ctrl+C in the console)
+# Or close Visual Studio
 
-# Detener bases de datos
+# Stop databases
 docker-compose stop mongodb postgres
 ```
 
 ---
 
-## 🐳 Workflow 2: Todo en Docker
+## 🐳 Workflow 2: Everything in Docker
 
-### ✅ Ventajas
+### ✅ Advantages
 
-- 🎯 **Entorno idéntico a producción**
-- 📦 **Todo aislado y consistente**
-- 🤝 **Fácil compartir con el equipo**
-- 🚀 **Un comando para levantar todo**
-- 🔗 **Networking automático entre servicios**
+- 🎯 **Identical to production environment**
+- 📦 **Everything isolated and consistent**
+- 🤝 **Easy to share with the team**
+- 🚀 **One command to start everything**
+- 🔗 **Automatic networking between services**
 
-### ❌ Desventajas
+### ❌ Disadvantages
 
-- ⏱️ **Rebuild en cada cambio**: ~30-60 segundos
-- 🐛 **Debugging complejo**: Requiere remote debugging
-- 🔄 **Sin Hot Reload** por defecto
-- 📝 **Logs menos claros**: Mezclados en docker-compose
+- ⏱️ **Rebuild on every change**: ~30-60 seconds
+- 🐛 **Complex debugging**: Requires remote debugging
+- 🔄 **No Hot Reload** by default
+- 📝 **Less clear logs**: Mixed in docker-compose
 
-### 🔧 Setup Inicial
+### 🔧 Initial Setup
 
-**Construir imágenes:**
+**Build images:**
 
 ```bash
 cd C:\Users\devke\source\bla-task-management-system
 
-# Build de todos los servicios
+# Build all services
 docker-compose build
 
-# O build individual
+# Or individual build
 docker-compose build tasks-api
 docker-compose build users-api
 ```
 
-### 🚀 Iniciar Todos los Servicios
+### 🚀 Start All Services
 
 ```bash
-# Levantar todo
+# Start everything
 docker-compose up -d
 
-# Ver logs
+# See logs
 docker-compose logs -f
 
-# Ver logs de un servicio específico
+# See logs of a specific service
 docker-compose logs -f tasks-api
 ```
 
-**Verificar:**
+**Verify:**
 
 ```bash
 docker-compose ps
 
-# Deberías ver:
+# You should see:
 # - tasks-mongodb (healthy)
 # - users-postgres (healthy)
 # - tasks-api (running)
 # - users-api (running)
-# - web (running - cuando se implemente)
+# - web (running - when implemented)
 ```
 
-### 🔄 Flujo de Trabajo (Con Docker)
+### 🔄 Workflow (With Docker)
 
 ```
-1. Haces cambios en el código
+1. Make changes in the code
    ↓
-2. Guardas el archivo
+2. Save the file
    ↓
-3. Rebuild de la imagen Docker (~30-60 segundos)
+3. Rebuild Docker image (~30-60 seconds)
    docker-compose build tasks-api
    ↓
-4. Restart del contenedor (~5-10 segundos)
+4. Restart container (~5-10 seconds)
    docker-compose up -d tasks-api
    ↓
-5. Pruebas en Postman/Swagger
+5. Test in Postman/Swagger
    ↓
-6. Repites el ciclo
+6. Repeat the cycle
 ```
 
-**Ejemplo práctico:**
+**Practical example:**
 
 ```bash
-# 1. Editas TasksController.cs
+# 1. Edit TasksController.cs
 code apps/tasks-api/src/TasksApi.WebApi/Controllers/TasksController.cs
 
-# 2. Guardas
+# 2. Save
 
 # 3. Rebuild
 docker-compose build tasks-api
@@ -260,249 +260,249 @@ docker-compose build tasks-api
 # 4. Restart
 docker-compose up -d tasks-api
 
-# 5. Ver logs para verificar que inició
+# 5. View logs to verify it started
 docker-compose logs -f tasks-api
 
-# 6. Pruebas en Postman
+# 6. Test in Postman
 ```
 
-### 🔄 Rebuild Rápido vs Completo
+### 🔄 Quick Rebuild vs Full Rebuild
 
-**Rebuild rápido (cache):**
+**Quick rebuild (cache):**
 
 ```bash
 docker-compose build tasks-api
 docker-compose up -d tasks-api
-# Tiempo: ~10-20 segundos (usa cache)
+# Time: ~10-20 seconds (uses cache)
 ```
 
-**Rebuild completo (sin cache):**
+**Full rebuild (no cache):**
 
 ```bash
 docker-compose build --no-cache tasks-api
 docker-compose up -d tasks-api
-# Tiempo: ~60-90 segundos (descarga todo de nuevo)
+# Time: ~60-90 seconds (downloads everything again)
 ```
 
-### 🛑 Detener Servicios
+### 🛑 Stop Services
 
 ```bash
-# Detener todos
+# Stop all
 docker-compose down
 
-# Detener pero mantener volúmenes (datos)
+# Stop but keep volumes (data)
 docker-compose down
 
-# Detener y eliminar volúmenes (CUIDADO: borra datos)
+# Stop and remove volumes (CAUTION: deletes data)
 docker-compose down -v
 
-# Detener solo APIs (mantener bases de datos)
+# Stop only APIs (keep databases)
 docker-compose stop tasks-api users-api
 ```
 
 ---
 
-## 📊 Comparación
+## 📊 Comparison
 
-| Aspecto | Desarrollo Local | Todo en Docker |
+| Aspect | Local Development | Everything in Docker |
 |---------|-----------------|---------------|
-| **Hot Reload** | ✅ Sí | ❌ No |
-| **Debugging** | ✅ Fácil (breakpoints) | ⚠️ Complejo (remote) |
-| **Tiempo por cambio** | ⚡ 2-5 segundos | ⏱️ 30-60 segundos |
-| **TDD** | ✅ Instantáneo | ⚠️ Lento |
-| **Similitud con prod** | ⚠️ Media | ✅ Alta |
-| **Setup inicial** | ⚡ Rápido | ⏱️ Lento (build) |
-| **Logs** | ✅ Claros | ⚠️ Mezclados |
-| **Networking** | ⚠️ Manual (localhost) | ✅ Automático |
-| **Aislamiento** | ⚠️ Usa tu máquina | ✅ Contenedores |
-| **Portabilidad** | ⚠️ Media | ✅ Alta |
+| **Hot Reload** | ✅ Yes | ❌ No |
+| **Debugging** | ✅ Easy (breakpoints) | ⚠️ Complex (remote) |
+| **Time per change** | ⚡ 2-5 seconds | ⏱️ 30-60 seconds |
+| **TDD** | ✅ Instant | ⚠️ Slow |
+| **Production similarity** | ⚠️ Medium | ✅ High |
+| **Initial setup** | ⚡ Fast | ⏱️ Slow (build) |
+| **Logs** | ✅ Clear | ⚠️ Mixed |
+| **Networking** | ⚠️ Manual (localhost) | ✅ Automatic |
+| **Isolation** | ⚠️ Uses your machine | ✅ Containers |
+| **Portability** | ⚠️ Medium | ✅ High |
 
 ---
 
-## 🎯 Cuándo Usar Cada Uno
+## 🎯 When to Use Each One
 
-### 👨‍💻 Usa Desarrollo Local cuando:
+### 👨‍💻 Use Local Development when:
 
-- ✅ Estás implementando una feature (US-02, US-03, etc.)
-- ✅ Estás haciendo TDD (ciclo rojo-verde-refactor)
-- ✅ Necesitas debugging frecuente
-- ✅ Estás iterando rápidamente en una solución
-- ✅ Estás ejecutando tests unitarios constantemente
-- ✅ Estás desarrollando activamente (90% del tiempo)
+- ✅ You're implementing a feature (US-02, US-03, etc.)
+- ✅ You're doing TDD (red-green-refactor cycle)
+- ✅ You need frequent debugging
+- ✅ You're rapidly iterating on a solution
+- ✅ You're constantly running unit tests
+- ✅ You're actively developing (90% of the time)
 
-**Ejemplo:**
+**Example:**
 ```
-"Voy a implementar US-02: Create Task"
-→ Usa desarrollo local
-→ TDD: test → código → test → refactor
-→ Hot reload para feedback rápido
+"I'm going to implement US-02: Create Task"
+→ Use local development
+→ TDD: test → code → test → refactor
+→ Hot reload for quick feedback
 ```
 
-### 🐳 Usa Docker Compose cuando:
+### 🐳 Use Docker Compose when:
 
-- ✅ Vas a hacer un demo del sistema completo
-- ✅ Necesitas testing de integración entre servicios
-- ✅ Vas a hacer deploy/PR (verificación final)
-- ✅ Estás verificando que todo funcione junto
-- ✅ Alguien más va a probar tu trabajo
-- ✅ Antes de marcar una feature como "done"
+- ✅ You're going to demo the complete system
+- ✅ You need integration testing between services
+- ✅ You're going to deploy/PR (final verification)
+- ✅ You're verifying everything works together
+- ✅ Someone else is going to test your work
+- ✅ Before marking a feature as "done"
 
-**Ejemplo:**
+**Example:**
 ```
-"Terminé de implementar US-02, US-03, US-05, US-06"
-→ Usa Docker Compose
-→ Verifica que todo funcione junto
-→ Demo al cliente/equipo
-→ Haz commit y PR
+"I finished implementing US-02, US-03, US-05, US-06"
+→ Use Docker Compose
+→ Verify everything works together
+→ Demo to client/team
+→ Commit and PR
 ```
 
 ---
 
-## 🔧 Comandos Útiles
+## 🔧 Useful Commands
 
-### Desarrollo Local
+### Local Development
 
 ```powershell
-# Iniciar solo bases de datos
+# Start only databases
 docker-compose up -d mongodb postgres
 
-# Verificar estado
+# Verify status
 docker ps
 Get-Process -Name dotnet
 
-# Iniciar API manualmente
+# Start API manually
 cd apps/tasks-api/src/TasksApi.WebApi
 dotnet run
 
-# Watch mode (auto-recompila)
+# Watch mode (auto-recompiles)
 dotnet watch run
 
-# Tests en watch mode
+# Tests in watch mode
 dotnet watch test
 
-# Ver logs de MongoDB
+# View MongoDB logs
 docker logs -f tasks-mongodb
 
-# Detener API (Ctrl+C)
-# Detener DBs
+# Stop API (Ctrl+C)
+# Stop DBs
 docker-compose stop mongodb postgres
 ```
 
 ### Docker Compose
 
 ```bash
-# Build todo
+# Build everything
 docker-compose build
 
-# Levantar todo
+# Start everything
 docker-compose up -d
 
-# Ver logs
+# View logs
 docker-compose logs -f
 docker-compose logs -f tasks-api
 
-# Rebuild y restart de una API
+# Rebuild and restart an API
 docker-compose build tasks-api && docker-compose up -d tasks-api
 
-# Ver estado
+# View status
 docker-compose ps
 
-# Entrar a un contenedor
+# Enter a container
 docker exec -it tasks-api bash
 
-# Detener todo
+# Stop everything
 docker-compose down
 
-# Detener y limpiar todo
+# Stop and clean everything
 docker-compose down -v --remove-orphans
 ```
 
-### Combinado (Recomendado)
+### Combined (Recommended)
 
 ```powershell
-# DBs en Docker, APIs local
+# DBs in Docker, APIs local
 docker-compose up -d mongodb postgres
 cd apps/tasks-api/src/TasksApi.WebApi
 dotnet watch run
 
-# En otra terminal
+# In another terminal
 cd apps/users-api/src/UsersApi.WebApi
 dotnet watch run
 ```
 
 ---
 
-## 💡 Recomendación Final
+## 💡 Final Recommendation
 
-**Para este proyecto (Technical Interview):**
+**For this project (Technical Interview):**
 
-### Durante Desarrollo (Ahora):
+### During Development (Now):
 
 ```
-✅ Bases de datos: Docker Compose
-✅ APIs: Desarrollo Local (dotnet run o Visual Studio)
+✅ Databases: Docker Compose
+✅ APIs: Local Development (dotnet run or Visual Studio)
 ✅ Tests: Local (dotnet test)
 ```
 
-**Por qué:**
-- Iteración rápida para TDD
-- Feedback inmediato
-- Debugging fácil
+**Why:**
+- Fast iteration for TDD
+- Immediate feedback
+- Easy debugging
 
-### Antes del Demo/Entrega:
+### Before Demo/Delivery:
 
 ```
-✅ Todo: Docker Compose
+✅ Everything: Docker Compose
 ✅ docker-compose up -d
-✅ Verificación completa
+✅ Complete verification
 ```
 
-**Por qué:**
-- Simula producción
-- Verifica integraciones
-- Fácil de demostrar
+**Why:**
+- Simulates production
+- Verifies integrations
+- Easy to demonstrate
 
 ---
 
-## 🚀 Ejemplo Práctico: Implementar US-02
+## 🚀 Practical Example: Implement US-02
 
-### Fase 1: Desarrollo (Local)
+### Phase 1: Development (Local)
 
 ```bash
-# 1. DBs en Docker
+# 1. DBs in Docker
 docker-compose up -d mongodb postgres
 
-# 2. API local con watch
+# 2. Local API with watch
 cd apps/tasks-api/src/TasksApi.WebApi
 dotnet watch run
 
-# 3. En otra terminal: tests en watch
+# 3. In another terminal: tests in watch
 cd apps/tasks-api/tests/TasksApi.Application.Tests
 dotnet watch test
 
-# 4. Iterar:
-#    - Escribes test
-#    - Test falla (rojo)
-#    - Escribes código
-#    - Test pasa (verde)
-#    - Refactorizas
-#    - Repites
+# 4. Iterate:
+#    - Write test
+#    - Test fails (red)
+#    - Write code
+#    - Test passes (green)
+#    - Refactor
+#    - Repeat
 ```
 
-### Fase 2: Verificación (Docker)
+### Phase 2: Verification (Docker)
 
 ```bash
-# 1. Detener API local (Ctrl+C)
+# 1. Stop local API (Ctrl+C)
 
-# 2. Build y levantar todo
+# 2. Build and start everything
 docker-compose build tasks-api
 docker-compose up -d
 
-# 3. Verificar
+# 3. Verify
 docker-compose logs -f tasks-api
 curl http://localhost:5001/api/tasks
 
-# 4. Si funciona, commit y push
+# 4. If it works, commit and push
 git add .
 git commit -m "feat: Implement US-02 Create Task"
 git push
@@ -510,5 +510,5 @@ git push
 
 ---
 
-**Última actualización:** 2026-06-09  
-**Documento:** Workflows de desarrollo
+**Last updated:** 2026-06-09  
+**Document:** Development Workflows

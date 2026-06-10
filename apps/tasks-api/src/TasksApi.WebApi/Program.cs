@@ -24,6 +24,7 @@ builder.Services.AddScoped<ITaskRepository>(sp =>
 builder.Services.AddScoped<GetAllTasksQueryHandler>();
 builder.Services.AddScoped<ICreateTaskCommandHandler, CreateTaskCommandHandler>();
 builder.Services.AddScoped<IUpdateTaskCommandHandler, UpdateTaskCommandHandler>();
+builder.Services.AddScoped<IDeleteTaskCommandHandler, DeleteTaskCommandHandler>();
 
 // CORS (for development)
 builder.Services.AddCors(options =>

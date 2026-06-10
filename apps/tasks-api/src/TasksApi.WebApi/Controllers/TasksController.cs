@@ -14,15 +14,18 @@ public class TasksController : ControllerBase
     private readonly GetAllTasksQueryHandler _queryHandler;
     private readonly ICreateTaskCommandHandler _createCommandHandler;
     private readonly IUpdateTaskCommandHandler _updateCommandHandler;
+    private readonly IDeleteTaskCommandHandler _deleteCommandHandler;
 
     public TasksController(
         GetAllTasksQueryHandler queryHandler, 
         ICreateTaskCommandHandler createCommandHandler,
-        IUpdateTaskCommandHandler updateCommandHandler)
+        IUpdateTaskCommandHandler updateCommandHandler,
+        IDeleteTaskCommandHandler deleteCommandHandler)
     {
         _queryHandler = queryHandler;
         _createCommandHandler = createCommandHandler;
         _updateCommandHandler = updateCommandHandler;
+        _deleteCommandHandler = deleteCommandHandler;
     }
 
     [HttpGet]
@@ -112,6 +115,31 @@ public class TasksController : ControllerBase
         catch (ArgumentException ex)
         {
             return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> DeleteTask(Guid id, [FromQuery] Guid userId)
+    {
+        try
+        {
+            var command = new DeleteTaskCommand
+            {
+                Id = id,
+                UserId = userId
+            };
+
+            await _deleteCommandHandler.Handle(command, CancellationToken.None);
+            
+            return NoContent();
+        }
+        catch (NotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (ForbiddenException ex)
+        {
+            return StatusCode(403, new { message = ex.Message });
         }
     }
 }

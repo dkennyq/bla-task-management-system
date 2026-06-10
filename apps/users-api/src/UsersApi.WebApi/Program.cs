@@ -84,15 +84,17 @@ try
         };
     });
 
-    // PostgreSQL configuration
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-        ?? "Host=postgres;Port=5432;Database=usersdb;Username=postgres;Password=postgres";
+// PostgreSQL configuration
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? "Host=localhost;Port=5432;Database=usersdb;Username=admin;Password=admin123;Include Error Detail=true";
 
-    // Register dependencies
-    builder.Services.AddScoped<IUserRepository>(sp =>
-        new UserRepository(connectionString));
-    builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
-    builder.Services.AddScoped<IAuthService, AuthService>();
+// Register dependencies
+builder.Services.AddScoped<IUserRepository>(sp =>
+    new UserRepository(connectionString));
+builder.Services.AddScoped<IRefreshTokenRepository>(sp =>
+    new RefreshTokenRepository(connectionString));
+builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
     // CORS (for development)
     builder.Services.AddCors(options =>

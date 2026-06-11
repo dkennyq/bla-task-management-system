@@ -19,9 +19,28 @@ db.tasks.createIndex({ createdAt: -1 });
 
 print("✅ Created indexes on tasks collection");
 
+// Helper to generate a GUID string (RFC 4122 v4)
+function guid() {
+  const hex = '0123456789abcdef';
+  let s = '';
+  for (let i = 0; i < 36; i++) {
+    if (i === 8 || i === 13 || i === 18 || i === 23) {
+      s += '-';
+    } else if (i === 14) {
+      s += '4';
+    } else if (i === 19) {
+      s += hex[(Math.random() * 4 | 0) + 8];
+    } else {
+      s += hex[Math.random() * 16 | 0];
+    }
+  }
+  return s;
+}
+
 // Insert seed data
 const seedTasks = [
   {
+    _id: guid(),
     id: UUID(),
     title: "Setup Development Environment",
     description:
@@ -34,6 +53,7 @@ const seedTasks = [
     updatedAt: new Date("2026-06-01"),
   },
   {
+    _id: guid(),
     id: UUID(),
     title: "Implement User Authentication",
     description:
@@ -46,6 +66,7 @@ const seedTasks = [
     updatedAt: new Date("2026-06-09"),
   },
   {
+    _id: guid(),
     id: UUID(),
     title: "Create Task Management UI",
     description: "Build Vue.js components for task CRUD operations",
@@ -57,6 +78,7 @@ const seedTasks = [
     updatedAt: new Date("2026-06-08"),
   },
   {
+    _id: guid(),
     id: UUID(),
     title: "Write Unit Tests",
     description: "Achieve 80% code coverage with comprehensive unit tests",
@@ -68,6 +90,7 @@ const seedTasks = [
     updatedAt: new Date("2026-06-09"),
   },
   {
+    _id: guid(),
     id: UUID(),
     title: "Deploy to Production",
     description: "Configure CI/CD pipeline and deploy to cloud infrastructure",

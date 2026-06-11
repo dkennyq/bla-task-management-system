@@ -22,27 +22,46 @@ This system demonstrates modern software engineering practices:
 
 ##  System Architecture
 
-```
-
-                     Docker Network                        
-                                                           
-            
-    Vue.js Web         Tasks API      Users API   
-     :3000        :5001           :5002     
-            
-                                                        
-                                                        
-                          ─ 
-                          MongoDB       PostgreSQL   
-                          :27017          :5432      
-                           
-                                                           
-                                           
-                            Seq                         
-                        Logging UI                      
-                          :8081                         
-                                           
-
+```mermaid
+graph TB
+    subgraph "Docker Network (app-network)"
+        subgraph "Frontend Layer"
+            WEB[(" Web UI<br/>Vue.js 3 + Vite<br/>:3000")]
+        end
+        
+        subgraph "API Layer"
+            TASKS[" Tasks API<br/>.NET 8<br/>:5001"]
+            USERS[" Users API<br/>.NET 8<br/>:5002"]
+        end
+        
+        subgraph "Data Layer"
+            MONGO[(" MongoDB<br/>:27017<br/>tasksdb")]
+            POSTGRES[("� PostgreSQL<br/>:5432<br/>usersdb")]
+        end
+        
+        subgraph "Observability"
+            SEQ[" Seq<br/>Logging Server<br/>:8081"]
+        end
+    end
+    
+    USER[" User<br/>Browser"] -->|HTTP :3000| WEB
+    
+    WEB -->|"REST API<br/>JWT Auth"| TASKS
+    WEB -->|"REST API<br/>JWT Auth"| USERS
+    
+    TASKS -->|"MongoDB Driver<br/>CRUD Operations"| MONGO
+    USERS -->|"Npgsql<br/>CRUD Operations"| POSTGRES
+    
+    TASKS -.->|"Serilog Logs"| SEQ
+    USERS -.->|"Serilog Logs"| SEQ
+    
+    style WEB fill:#42b883,stroke:#35495e,stroke-width:3px,color:#fff
+    style TASKS fill:#512BD4,stroke:#2d1674,stroke-width:3px,color:#fff
+    style USERS fill:#512BD4,stroke:#2d1674,stroke-width:3px,color:#fff
+    style MONGO fill:#47A248,stroke:#13aa52,stroke-width:3px,color:#fff
+    style POSTGRES fill:#4169E1,stroke:#2e4d8d,stroke-width:3px,color:#fff
+    style SEQ fill:#FF6600,stroke:#cc5200,stroke-width:3px,color:#fff
+    style USER fill:#FFD700,stroke:#FFA500,stroke-width:3px,color:#000
 ```
 
 ### Services

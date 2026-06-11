@@ -132,6 +132,7 @@ docker compose down -v
 
 ##  Documentation
 
+-  **[Development Process](DEVELOPMENT_PROCESS.md)** - 🎯 **Thought process, AI-assisted approach, and methodology**
 -  **[Setup Guide](docs/SETUP.md)** - Detailed installation and configuration
 -  **[API Testing Guide](docs/TESTING_APIS.md)** - How to test APIs with Postman, Swagger, curl
 -  **[API Security Guide](docs/API_SECURITY_GUIDE.md)** - Authentication and authorization

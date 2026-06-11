@@ -137,9 +137,9 @@ describe('TasksView', () => {
     store.tasks = [createMockTask({ id: '1', title: 'Task to Edit' })]
     await wrapper.vm.$nextTick()
 
-    const taskCard = wrapper.findAll('button').find(b => b.text().includes('Task to Edit'))
-    expect(taskCard).toBeDefined()
-    await taskCard!.trigger('click')
+    const taskCard = wrapper.find('[data-testid="task-card"]')
+    expect(taskCard.exists()).toBe(true)
+    await taskCard.trigger('click')
     await wrapper.vm.$nextTick()
 
     expect(wrapper.text()).toContain('Edit Task')

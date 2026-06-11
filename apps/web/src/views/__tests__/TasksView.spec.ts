@@ -129,6 +129,25 @@ describe('TasksView', () => {
     expect(wrapper.text()).toContain('Task Three')
   })
 
+  it('should open edit modal when task card clicked', async () => {
+    vi.spyOn(api, 'updateTask').mockResolvedValue(createMockTask())
+    const { wrapper } = mountAuthView()
+    await flushAll()
+    const store = useTasksStore()
+    store.tasks = [createMockTask({ id: '1', title: 'Task to Edit' })]
+    await wrapper.vm.$nextTick()
+
+    const taskCard = wrapper.findAll('button').find(b => b.text().includes('Task to Edit'))
+    expect(taskCard).toBeDefined()
+    await taskCard!.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.text()).toContain('Edit Task')
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(true)
+    const titleInput = wrapper.find('#task-title').element as HTMLInputElement
+    expect(titleInput.value).toBe('Task to Edit')
+  })
+
   it('should show loading spinner when loading', async () => {
     const { wrapper } = mountAuthView()
     const store = useTasksStore()

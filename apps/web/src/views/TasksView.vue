@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { onMounted, computed, ref } from 'vue'
-import { RouterLink } from 'vue-router'
 import { useTasksStore } from '../stores/tasksStore'
 import TaskFormModal from '../components/tasks/TaskFormModal.vue'
-import type { TaskStatus } from '../types/task'
+import type { Task, TaskStatus } from '../types/task'
 import type { SortBy } from '../stores/tasksStore'
 
 const tasksStore = useTasksStore()
 
-const showCreateModal = ref(false)
+const showModal = ref(false)
+const modalMode = ref<'create' | 'edit'>('create')
+const editingTask = ref<Task | null>(null)
 
 const statusFilters: (TaskStatus | 'All')[] = ['All', 'Pending', 'InProgress', 'Completed']
 const sortOptions: { value: SortBy; label: string }[] = [
@@ -65,13 +66,27 @@ function handleRetry() {
   tasksStore.fetchTasks()
 }
 
-function handleCreateSave() {
-  showCreateModal.value = false
+function openCreateModal() {
+  modalMode.value = 'create'
+  editingTask.value = null
+  showModal.value = true
+}
+
+function openEditModal(task: Task) {
+  modalMode.value = 'edit'
+  editingTask.value = task
+  showModal.value = true
+}
+
+function handleModalSave() {
+  showModal.value = false
+  editingTask.value = null
   tasksStore.fetchTasks()
 }
 
-function handleCreateClose() {
-  showCreateModal.value = false
+function handleModalClose() {
+  showModal.value = false
+  editingTask.value = null
 }
 </script>
 
@@ -82,7 +97,7 @@ function handleCreateClose() {
       <div class="flex items-center justify-between mb-6">
         <h2 class="text-3xl font-bold text-gray-900">Tasks</h2>
         <button
-          @click="showCreateModal = true"
+          @click="openCreateModal()"
           class="btn-primary inline-flex items-center gap-2"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -219,7 +234,7 @@ function handleCreateClose() {
         <p class="text-gray-500 text-lg">{{ emptyMessage }}</p>
         <button
           v-if="tasksStore.tasks.length === 0"
-          @click="showCreateModal = true"
+          @click="openCreateModal()"
           class="btn-primary inline-flex items-center gap-2 mt-4"
         >
           Create Task
@@ -228,11 +243,11 @@ function handleCreateClose() {
 
       <!-- Task Cards -->
       <div v-else class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <RouterLink
+        <button
           v-for="task in tasksStore.filteredTasks"
           :key="task.id"
-          :to="`/tasks/${task.id}`"
-          class="card hover:shadow-lg hover:border-blue-200 transition-all duration-200 border border-transparent block"
+          @click="openEditModal(task)"
+          class="card hover:shadow-lg hover:border-blue-200 transition-all duration-200 border border-transparent block text-left w-full cursor-pointer"
         >
           <div class="flex items-start justify-between gap-3 mb-3">
             <span
@@ -263,13 +278,14 @@ function handleCreateClose() {
             </span>
             <span title="Created">{{ formatDate(task.createdAt) }}</span>
           </div>
-        </RouterLink>
+        </button>
       </div>
       <TaskFormModal
-        :is-open="showCreateModal"
-        mode="create"
-        @save="handleCreateSave"
-        @close="handleCreateClose"
+        :is-open="showModal"
+        :mode="modalMode"
+        :task-data="editingTask"
+        @save="handleModalSave"
+        @close="handleModalClose"
       />
     </div>
   </div>

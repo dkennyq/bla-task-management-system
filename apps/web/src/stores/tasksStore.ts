@@ -116,34 +116,35 @@ export const useTasksStore = defineStore('tasks', () => {
   }
 
   async function updateTask(id: string, task: UpdateTaskDto) {
-    loading.value = true
     error.value = null
+    const snapshot = tasks.value.map(t => ({ ...t }))
+    const index = tasks.value.findIndex(t => t.id === id)
+    if (index !== -1 && task.status) {
+      tasks.value[index] = { ...tasks.value[index], status: task.status }
+    }
     try {
       const updatedTask = await updateTaskApi(id, task)
-      const index = tasks.value.findIndex(t => t.id === id)
       if (index !== -1) {
         tasks.value[index] = updatedTask
       }
       return updatedTask
     } catch (err: unknown) {
+      tasks.value = snapshot
       error.value = (err as ApiError).message || 'Failed to update task'
       throw err
-    } finally {
-      loading.value = false
     }
   }
 
   async function deleteTask(id: string) {
-    loading.value = true
     error.value = null
+    const snapshot = tasks.value.map(t => ({ ...t }))
+    tasks.value = tasks.value.filter(t => t.id !== id)
     try {
       await deleteTaskApi(id)
-      tasks.value = tasks.value.filter(t => t.id !== id)
     } catch (err: unknown) {
+      tasks.value = snapshot
       error.value = (err as ApiError).message || 'Failed to delete task'
       throw err
-    } finally {
-      loading.value = false
     }
   }
 

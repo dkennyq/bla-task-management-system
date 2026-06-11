@@ -1,15 +1,24 @@
 <script setup lang="ts">
 import { onMounted, computed, ref } from 'vue'
+import { useToast } from 'vue-toastification'
 import { useTasksStore } from '../stores/tasksStore'
+import TaskCard from '../components/tasks/TaskCard.vue'
 import TaskFormModal from '../components/tasks/TaskFormModal.vue'
+import DeleteConfirmDialog from '../components/tasks/DeleteConfirmDialog.vue'
 import type { Task, TaskStatus } from '../types/task'
 import type { SortBy } from '../stores/tasksStore'
 
+const toast = useToast()
 const tasksStore = useTasksStore()
 
 const showModal = ref(false)
 const modalMode = ref<'create' | 'edit'>('create')
 const editingTask = ref<Task | null>(null)
+
+const showDeleteDialog = ref(false)
+const taskToDelete = ref<Task | null>(null)
+const deletingTask = ref(false)
+const updatingTaskId = ref<string | null>(null)
 
 const statusFilters: (TaskStatus | 'All')[] = ['All', 'Pending', 'InProgress', 'Completed']
 const sortOptions: { value: SortBy; label: string }[] = [
@@ -23,32 +32,6 @@ function statusLabel(status: TaskStatus | 'All'): string {
   if (status === 'InProgress') return 'In Progress'
   if (status === 'All') return 'All'
   return status
-}
-
-function statusBadgeColor(status: TaskStatus): string {
-  switch (status) {
-    case 'Pending': return 'bg-yellow-100 text-yellow-800'
-    case 'InProgress': return 'bg-blue-100 text-blue-800'
-    case 'Completed': return 'bg-green-100 text-green-800'
-  }
-}
-
-function priorityBadgeColor(priority: string): string {
-  switch (priority) {
-    case 'High': return 'bg-red-100 text-red-800'
-    case 'Medium': return 'bg-orange-100 text-orange-800'
-    case 'Low': return 'bg-gray-100 text-gray-600'
-    default: return 'bg-gray-100 text-gray-600'
-  }
-}
-
-function formatDate(dateStr?: string): string {
-  if (!dateStr) return ''
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
 }
 
 const emptyMessage = computed(() => {
@@ -87,6 +70,54 @@ function handleModalSave() {
 function handleModalClose() {
   showModal.value = false
   editingTask.value = null
+}
+
+function handleEdit(task: Task) {
+  openEditModal(task)
+}
+
+function handleDelete(task: Task) {
+  taskToDelete.value = task
+  showDeleteDialog.value = true
+}
+
+function handleDeleteCancel() {
+  showDeleteDialog.value = false
+  taskToDelete.value = null
+}
+
+async function handleDeleteConfirm() {
+  if (!taskToDelete.value) return
+  deletingTask.value = true
+  try {
+    await tasksStore.deleteTask(taskToDelete.value.id)
+    toast.success('Task deleted successfully')
+    showDeleteDialog.value = false
+    taskToDelete.value = null
+  } catch {
+    toast.error('Failed to delete task')
+  } finally {
+    deletingTask.value = false
+  }
+}
+
+async function handleStatusChange(task: Task, newStatus: TaskStatus) {
+  updatingTaskId.value = task.id
+  try {
+    const dto = {
+      title: task.title,
+      description: task.description,
+      priority: task.priority,
+      status: newStatus,
+      dueDate: task.dueDate || undefined,
+    }
+    await tasksStore.updateTask(task.id, dto)
+    toast.success('Status updated successfully')
+  } catch {
+    toast.error('Failed to update status')
+  } finally {
+    updatingTaskId.value = null
+  }
 }
 </script>
 
@@ -243,49 +274,32 @@ function handleModalClose() {
 
       <!-- Task Cards -->
       <div v-else class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <button
+        <TaskCard
           v-for="task in tasksStore.filteredTasks"
           :key="task.id"
-          @click="openEditModal(task)"
-          class="card hover:shadow-lg hover:border-blue-200 transition-all duration-200 border border-transparent block text-left w-full cursor-pointer"
-        >
-          <div class="flex items-start justify-between gap-3 mb-3">
-            <span
-              :class="[
-                'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
-                priorityBadgeColor(task.priority),
-              ]"
-            >
-              {{ task.priority }}
-            </span>
-            <span
-              :class="[
-                'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium shrink-0',
-                statusBadgeColor(task.status),
-              ]"
-            >
-              {{ statusLabel(task.status) }}
-            </span>
-          </div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-1 truncate">{{ task.title }}</h3>
-          <p class="text-sm text-gray-600 mb-3 line-clamp-2">{{ task.description }}</p>
-          <div class="flex items-center justify-between text-xs text-gray-500">
-            <span v-if="task.dueDate" class="flex items-center gap-1" title="Due date">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              {{ formatDate(task.dueDate) }}
-            </span>
-            <span title="Created">{{ formatDate(task.createdAt) }}</span>
-          </div>
-        </button>
+          :task="task"
+          :status-updating="task.id === updatingTaskId"
+          @edit="handleEdit"
+          @delete="handleDelete"
+          @status-change="handleStatusChange"
+        />
       </div>
+
+      <!-- Modals -->
       <TaskFormModal
         :is-open="showModal"
         :mode="modalMode"
         :task-data="editingTask"
         @save="handleModalSave"
         @close="handleModalClose"
+      />
+
+      <DeleteConfirmDialog
+        :is-open="showDeleteDialog"
+        :task-title="taskToDelete?.title ?? ''"
+        :loading="deletingTask"
+        @confirm="handleDeleteConfirm"
+        @cancel="handleDeleteCancel"
       />
     </div>
   </div>

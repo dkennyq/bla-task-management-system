@@ -94,13 +94,24 @@ describe('TasksView', () => {
     vi.restoreAllMocks()
   })
 
-  it('should render header and create button link', async () => {
+  it('should render header and create button', async () => {
     const { wrapper } = mountAuthView()
     await flushAll()
     expect(wrapper.text()).toContain('Tasks')
-    const links = wrapper.findAllComponents({ name: 'RouterLink' })
-    const createLink = links.find(l => l.props('to') === '/tasks/new')
-    expect(createLink).toBeDefined()
+    const createBtn = wrapper.findAll('button').find(b => b.text().includes('Create New Task'))
+    expect(createBtn).toBeDefined()
+  })
+
+  it('should open create modal when create button clicked', async () => {
+    vi.spyOn(api, 'createTask').mockResolvedValue(createMockTask())
+    const { wrapper } = mountAuthView()
+    await flushAll()
+    const createBtn = wrapper.findAll('button').find(b => b.text().includes('Create New Task'))
+    expect(createBtn).toBeDefined()
+    await createBtn!.trigger('click')
+    await wrapper.vm.$nextTick()
+    expect(wrapper.text()).toContain('Create New Task')
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(true)
   })
 
   it('should render task cards for each task', async () => {

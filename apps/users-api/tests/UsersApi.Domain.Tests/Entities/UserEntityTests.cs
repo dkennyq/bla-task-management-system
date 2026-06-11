@@ -1,5 +1,6 @@
 using FluentAssertions;
 using UsersApi.Domain.Entities;
+using UsersApi.Domain.Enums;
 
 namespace UsersApi.Domain.Tests.Entities;
 
@@ -52,5 +53,47 @@ public class UserEntityTests
     {
         Action act = () => new UserEntity(Guid.NewGuid(), "johndoe", "John Doe", "john@example.com", "");
         act.Should().Throw<ArgumentException>().WithMessage("*Password hash cannot be empty*");
+    }
+
+    [Fact]
+    public void Constructor_ShouldDefaultToOperatorRole()
+    {
+        var entity = new UserEntity(Guid.NewGuid(), "johndoe", "John Doe", "john@example.com", "hash123");
+
+        entity.Role.Should().Be(UserRole.Operator);
+    }
+
+    [Fact]
+    public void Constructor_ShouldSetManagerRole_WhenProvided()
+    {
+        var entity = new UserEntity(Guid.NewGuid(), "admin", "Admin User", "admin@example.com", "hash123", UserRole.Manager);
+
+        entity.Role.Should().Be(UserRole.Manager);
+    }
+
+    [Fact]
+    public void Constructor_ShouldThrow_WhenInvalidRole()
+    {
+        Action act = () => new UserEntity(Guid.NewGuid(), "johndoe", "John Doe", "john@example.com", "hash123", (UserRole)999);
+        act.Should().Throw<ArgumentException>().WithMessage("*Invalid role*");
+    }
+
+    [Fact]
+    public void UpdateRole_ShouldChangeRole()
+    {
+        var entity = new UserEntity(Guid.NewGuid(), "johndoe", "John Doe", "john@example.com", "hash123");
+
+        entity.UpdateRole(UserRole.Manager);
+
+        entity.Role.Should().Be(UserRole.Manager);
+    }
+
+    [Fact]
+    public void UpdateRole_ShouldThrow_WhenInvalidRole()
+    {
+        var entity = new UserEntity(Guid.NewGuid(), "johndoe", "John Doe", "john@example.com", "hash123");
+
+        Action act = () => entity.UpdateRole((UserRole)999);
+        act.Should().Throw<ArgumentException>().WithMessage("*Invalid role*");
     }
 }

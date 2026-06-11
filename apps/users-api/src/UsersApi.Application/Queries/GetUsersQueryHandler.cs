@@ -24,8 +24,13 @@ public class GetUsersQueryHandler : IGetUsersQueryHandler
         {
             Items = users.Select(u => new UserListItemDto
             {
+                Id = u.Id,
                 Username = u.Username,
-                FullName = u.FullName
+                Email = u.Email,
+                FullName = u.FullName,
+                Role = u.Role.ToString(),
+                IsActive = true,
+                CreatedAt = u.CreatedAt
             }).ToList(),
             Page = page,
             PageSize = pageSize,

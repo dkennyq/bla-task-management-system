@@ -76,6 +76,7 @@ public class UsersController : ControllerBase
         }
     }
 
+    [Authorize(Roles = "Manager")]
     [HttpGet]
     public async Task<ActionResult<PagedResponse<UserListItemDto>>> GetUsers([FromQuery] GetUsersQuery query)
     {

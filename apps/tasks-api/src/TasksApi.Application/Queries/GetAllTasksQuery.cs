@@ -1,3 +1,3 @@
 namespace TasksApi.Application.Queries;
 
-public record GetAllTasksQuery(Guid UserId);
+public record GetAllTasksQuery(Guid UserId, string UserRole = "Operator");

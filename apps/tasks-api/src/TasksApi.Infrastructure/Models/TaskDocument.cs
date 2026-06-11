@@ -4,6 +4,7 @@ using TasksApi.Domain.Entities;
 
 namespace TasksApi.Infrastructure.Models;
 
+[BsonIgnoreExtraElements]
 public class TaskDocument
 {
     [BsonId]

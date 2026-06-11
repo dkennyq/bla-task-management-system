@@ -7,6 +7,7 @@ const authStore = useAuthStore()
 const router = useRouter()
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
+const isManager = computed(() => authStore.isManager)
 const currentUser = computed(() => authStore.currentUser)
 
 function handleLogout() {
@@ -37,10 +38,19 @@ function handleLogout() {
               >
                 Tasks
               </RouterLink>
-              
+              <RouterLink
+                v-if="isManager"
+                to="/admin/users"
+                class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Admin
+              </RouterLink>
               <div class="flex items-center space-x-3 border-l border-gray-200 pl-4">
                 <span class="text-sm text-gray-600">
                   {{ currentUser?.username || currentUser?.email }}
+                </span>
+                <span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium">
+                  {{ currentUser?.role }}
                 </span>
                 <button
                   @click="handleLogout"

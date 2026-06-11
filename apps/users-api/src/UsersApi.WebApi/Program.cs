@@ -81,13 +81,14 @@ try
             ValidateIssuerSigningKey = true,
             ValidIssuer = jwtSettings.Issuer,
             ValidAudience = jwtSettings.Audience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.GetEffectiveSecretKey())),
             ClockSkew = TimeSpan.Zero
         };
     });
 
 // PostgreSQL configuration
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+var connectionString = builder.Configuration.GetValue<string>("Postgres:ConnectionString")
+    ?? builder.Configuration.GetConnectionString("DefaultConnection")
     ?? "Host=localhost;Port=5432;Database=usersdb;Username=admin;Password=admin123;Include Error Detail=true";
 
 // Register dependencies
@@ -102,6 +103,8 @@ builder.Services.AddScoped<IGetCurrentUserQueryHandler, GetCurrentUserQueryHandl
 builder.Services.AddScoped<IGetUsersQueryHandler, GetUsersQueryHandler>();
 builder.Services.AddScoped<IUpdateUserCommandHandler, UpdateUserCommandHandler>();
 builder.Services.AddScoped<IResetPasswordCommandHandler, ResetPasswordCommandHandler>();
+builder.Services.AddScoped<ICreateUserByAdminCommandHandler, CreateUserByAdminCommandHandler>();
+builder.Services.AddScoped<IUpdateUserRoleCommandHandler, UpdateUserRoleCommandHandler>();
 
     // CORS (for development)
     builder.Services.AddCors(options =>

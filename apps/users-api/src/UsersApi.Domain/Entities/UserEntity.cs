@@ -1,3 +1,4 @@
+using UsersApi.Domain.Enums;
 using UsersApi.Domain.ValueObjects;
 
 namespace UsersApi.Domain.Entities;
@@ -9,9 +10,10 @@ public class UserEntity
     public string FullName { get; private set; }
     public string Email { get; private set; }
     public string PasswordHash { get; private set; }
+    public UserRole Role { get; private set; }
     public DateTime CreatedAt { get; private set; }
 
-    public UserEntity(Guid id, string username, string fullName, string email, string passwordHash)
+    public UserEntity(Guid id, string username, string fullName, string email, string passwordHash, UserRole role = UserRole.Operator)
     {
         var usernameVo = new Username(username);
 
@@ -22,11 +24,15 @@ public class UserEntity
 
         var emailVo = new Email(email);
 
+        if (!Enum.IsDefined(typeof(UserRole), role))
+            throw new ArgumentException("Invalid role", nameof(role));
+
         Id = id;
         Username = usernameVo.Value;
         FullName = fullName;
         Email = emailVo.Value;
         PasswordHash = passwordHash;
+        Role = role;
         CreatedAt = DateTime.UtcNow;
     }
 
@@ -48,5 +54,12 @@ public class UserEntity
             throw new ArgumentException("Password hash cannot be empty", nameof(newPasswordHash));
 
         PasswordHash = newPasswordHash;
+    }
+
+    public void UpdateRole(UserRole newRole)
+    {
+        if (!Enum.IsDefined(typeof(UserRole), newRole))
+            throw new ArgumentException("Invalid role", nameof(newRole));
+        Role = newRole;
     }
 }

@@ -51,7 +51,7 @@ public class GetUsersQueryHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ShouldNotExposeSensitiveFields()
+    public async Task Handle_ShouldNotExposePasswordHash()
     {
         var users = new List<UserEntity>
         {
@@ -70,8 +70,32 @@ public class GetUsersQueryHandlerTests
         var result = await _handler.Handle(query);
 
         result.Items[0].Should().NotBeNull();
-        typeof(UserListItemDto).GetProperty("Email").Should().BeNull();
         typeof(UserListItemDto).GetProperty("PasswordHash").Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Handle_ShouldIncludeAdminFields()
+    {
+        var users = new List<UserEntity>
+        {
+            new(Guid.NewGuid(), "alice", "Alice Smith", "alice@example.com", "hash1")
+        };
+
+        _repositoryMock
+            .Setup(r => r.GetAllAsync(1, 10, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(users);
+
+        _repositoryMock
+            .Setup(r => r.GetCountAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1);
+
+        var query = new GetUsersQuery();
+        var result = await _handler.Handle(query);
+
+        result.Items[0].Should().NotBeNull();
+        result.Items[0].Id.Should().NotBeEmpty();
+        result.Items[0].Email.Should().Be("alice@example.com");
+        result.Items[0].Role.Should().Be("Operator");
     }
 
     [Fact]

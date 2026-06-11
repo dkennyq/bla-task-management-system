@@ -123,8 +123,8 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - VITE_TASKS_API_URL=http://localhost:5001
-      - VITE_USERS_API_URL=http://localhost:5002
+      - VITE_TASKS_API_URL=http://localhost:5001/api
+      - VITE_USERS_API_URL=http://localhost:5002/api
     volumes:
       - ./apps/web:/app
       - /app/node_modules

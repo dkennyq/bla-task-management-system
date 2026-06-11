@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "BLA Task Management System",
-    "description": "Collection for Tasks API and Users API testing",
+    "description": "Collection for Tasks API and Users API testing\n\nSeed Users (password: Password123! for all):\n  Manager:  admin@taskmanagement.com\n  Operator: john.doe@example.com\n  Operator: jane.smith@example.com",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -9,7 +9,7 @@
       "name": "Users API",
       "item": [
         {
-          "name": "Register User",
+          "name": "Register User (Public)",
           "request": {
             "method": "POST",
             "header": [
@@ -20,16 +20,16 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"johndoe\",\n  \"fullName\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePass123!\"\n}"
+              "raw": "{\n  \"username\": \"newuser\",\n  \"fullName\": \"New User\",\n  \"email\": \"newuser@example.com\",\n  \"password\": \"Password123!\"\n}"
             },
             "url": {
-              "raw": "http://localhost:5034/api/users/register",
+              "raw": "http://localhost:5002/api/users/register",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "5034",
+              "port": "5002",
               "path": ["api", "users", "register"]
             },
-            "description": "Register a new user. Returns JWT access token + refresh token."
+            "description": "Register a new user (public, no auth required). Always created as Operator role. Returns UserDto."
           },
           "event": [
             {
@@ -38,16 +38,9 @@
                 "exec": [
                   "const response = pm.response.json();",
                   "",
-                  "if (response.token) {",
-                  "    pm.collectionVariables.set(\"jwt_token\", response.token);",
-                  "    console.log(\"jwt_token saved:\", response.token.substring(0, 30) + \"...\");",
-                  "} else {",
-                  "    console.error(\"there is no token in the response.\");",
-                  "}",
-                  "",
-                  "if (response.refreshToken) {",
-                  "    pm.collectionVariables.set(\"refresh_token\", response.refreshToken);",
-                  "    console.log(\"refresh_token saved\");",
+                  "if (response.id) {",
+                  "    pm.collectionVariables.set(\"targetUserId\", response.id);",
+                  "    console.log(\"targetUserId saved:\", response.id);",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -57,27 +50,7 @@
           "response": []
         },
         {
-          "name": "List Users",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "http://localhost:5034/api/users?page=1&pageSize=10",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "5034",
-              "path": ["api", "users"],
-              "query": [
-                { "key": "page", "value": "1" },
-                { "key": "pageSize", "value": "10" }
-              ]
-            },
-            "description": "List all registered users (public, no auth required). Returns paginated response with username, fullName only."
-          },
-          "response": []
-        },
-        {
-          "name": "Login",
+          "name": "Login (Manager)",
           "request": {
             "method": "POST",
             "header": [
@@ -88,16 +61,16 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePass123!\"\n}"
+              "raw": "{\n  \"email\": \"admin@taskmanagement.com\",\n  \"password\": \"Password123!\"\n}"
             },
             "url": {
-              "raw": "http://localhost:5034/api/users/login",
+              "raw": "http://localhost:5002/api/users/login",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "5034",
+              "port": "5002",
               "path": ["api", "users", "login"]
             },
-            "description": "Login with email/password. Returns token, refreshToken, expiresAt, userId, email, fullName."
+            "description": "Login as Manager (admin@taskmanagement.com). Returns token, refreshToken, userId, email, fullName, role."
           },
           "event": [
             {
@@ -109,13 +82,67 @@
                   "if (response.token) {",
                   "    pm.collectionVariables.set(\"jwt_token\", response.token);",
                   "    console.log(\"jwt_token saved:\", response.token.substring(0, 30) + \"...\");",
-                  "} else {",
-                  "    console.error(\"there is no token in the response.\");",
                   "}",
                   "",
                   "if (response.refreshToken) {",
                   "    pm.collectionVariables.set(\"refresh_token\", response.refreshToken);",
                   "    console.log(\"refresh_token saved\");",
+                  "}",
+                  "",
+                  "if (response.userId) {",
+                  "    pm.collectionVariables.set(\"userId\", response.userId);",
+                  "    console.log(\"userId saved:\", response.userId);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Login (Operator)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5002/api/users/login",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5002",
+              "path": ["api", "users", "login"]
+            },
+            "description": "Login as Operator (john.doe@example.com)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "",
+                  "if (response.token) {",
+                  "    pm.collectionVariables.set(\"jwt_token\", response.token);",
+                  "    console.log(\"jwt_token saved:\", response.token.substring(0, 30) + \"...\");",
+                  "}",
+                  "",
+                  "if (response.refreshToken) {",
+                  "    pm.collectionVariables.set(\"refresh_token\", response.refreshToken);",
+                  "    console.log(\"refresh_token saved\");",
+                  "}",
+                  "",
+                  "if (response.userId) {",
+                  "    pm.collectionVariables.set(\"userId\", response.userId);",
+                  "    console.log(\"userId saved:\", response.userId);",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -139,10 +166,10 @@
               "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
             },
             "url": {
-              "raw": "http://localhost:5034/api/users/refresh",
+              "raw": "http://localhost:5002/api/users/refresh",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "5034",
+              "port": "5002",
               "path": ["api", "users", "refresh"]
             },
             "description": "Exchange a refresh token for a new JWT access token + new refresh token."
@@ -157,8 +184,6 @@
                   "if (response.token) {",
                   "    pm.collectionVariables.set(\"jwt_token\", response.token);",
                   "    console.log(\"jwt_token saved:\", response.token.substring(0, 30) + \"...\");",
-                  "} else {",
-                  "    console.error(\"there is no token in the response.\");",
                   "}",
                   "",
                   "if (response.refreshToken) {",
@@ -173,6 +198,31 @@
           "response": []
         },
         {
+          "name": "List Users (Manager Only)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "url": {
+              "raw": "http://localhost:5002/api/users?page=1&pageSize=10",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5002",
+              "path": ["api", "users"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "10" }
+              ]
+            },
+            "description": "List all registered users. Requires Manager role. Returns paginated response with Items, Page, PageSize, TotalCount, TotalPages."
+          },
+          "response": []
+        },
+        {
           "name": "Get Current User (Me)",
           "request": {
             "method": "GET",
@@ -183,13 +233,13 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:5034/api/users/me",
+              "raw": "http://localhost:5002/api/users/me",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "5034",
+              "port": "5002",
               "path": ["api", "users", "me"]
             },
-            "description": "Get current authenticated user's profile from database. Returns id, username, fullName, email, createdAt."
+            "description": "Get current authenticated user's profile. Returns id, username, fullName, email, role, createdAt."
           },
           "response": []
         },
@@ -209,13 +259,13 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"johndoe_updated\",\n  \"fullName\": \"John Doe Updated\",\n  \"email\": \"john.updated@example.com\",\n  \"currentPassword\": \"SecurePass123!\",\n  \"newPassword\": \"NewSecurePass456!\"\n}"
+              "raw": "{\n  \"username\": \"johndoe_updated\",\n  \"fullName\": \"John Doe Updated\",\n  \"email\": \"john.updated@example.com\",\n  \"currentPassword\": \"Password123!\",\n  \"newPassword\": \"NewSecurePass456!\"\n}"
             },
             "url": {
-              "raw": "http://localhost:5034/api/users/me",
+              "raw": "http://localhost:5002/api/users/me",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "5034",
+              "port": "5002",
               "path": ["api", "users", "me"]
             },
             "description": "Update current user's profile (username, fullName, email) and optionally change password. Requires currentPassword when setting newPassword. All fields optional."
@@ -241,13 +291,87 @@
               "raw": "{\n  \"newPassword\": \"NewSecurePass456!\"\n}"
             },
             "url": {
-              "raw": "http://localhost:5034/api/users/me/reset-password",
+              "raw": "http://localhost:5002/api/users/me/reset-password",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "5034",
+              "port": "5002",
               "path": ["api", "users", "me", "reset-password"]
             },
             "description": "Reset current user's password without requiring current password. New password must meet complexity requirements (8+ chars, upper, lower, digit, special)."
+          },
+          "response": []
+        },
+        {
+          "name": "Admin: Create User (Manager Only)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"newoperator\",\n  \"email\": \"newoperator@example.com\",\n  \"password\": \"Password123!\",\n  \"fullName\": \"New Operator\",\n  \"role\": \"Operator\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5002/api/users/admin/create",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5002",
+              "path": ["api", "users", "admin", "create"]
+            },
+            "description": "Create a new user as Manager. Can create both Operator and Manager roles. Requires Manager role. Returns UserDto."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "",
+                  "if (response.id) {",
+                  "    pm.collectionVariables.set(\"targetUserId\", response.id);",
+                  "    console.log(\"targetUserId saved:\", response.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Admin: Update User Role (Manager Only)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"Manager\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5002/api/users/admin/{{targetUserId}}/role",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5002",
+              "path": ["api", "users", "admin", "{{targetUserId}}", "role"]
+            },
+            "description": "Update a user's role. Can only promote/demote between Operator and Manager. Protects against removing the last Manager. Requires Manager role. Returns updated UserDto."
           },
           "response": []
         }
@@ -267,14 +391,30 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:5077/api/tasks",
+              "raw": "http://localhost:5001/api/tasks",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "5077",
+              "port": "5001",
               "path": ["api", "tasks"]
             },
-            "description": "Get all tasks for the authenticated user. UserId extracted from JWT."
+            "description": "Get all tasks. Manager sees all tasks. Operator sees only their own tasks. UserId and Role extracted from JWT."
           },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "",
+                  "if (Array.isArray(response) && response.length > 0) {",
+                  "    pm.collectionVariables.set(\"taskId\", response[0].id);",
+                  "    console.log(\"taskId saved:\", response[0].id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "response": []
         },
         {
@@ -288,13 +428,13 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:5077/api/tasks/{{taskId}}",
+              "raw": "http://localhost:5001/api/tasks/{{taskId}}",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "5077",
+              "port": "5001",
               "path": ["api", "tasks", "{{taskId}}"]
             },
-            "description": "Get a specific task by ID. Must be owned by the authenticated user."
+            "description": "Get a specific task by ID. Must be owned by the authenticated user (or any task if Manager)."
           },
           "response": []
         },
@@ -314,17 +454,33 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Implement User Authentication\",\n  \"description\": \"Create JWT-based authentication system\",\n  \"priority\": \"High\",\n  \"dueDate\": \"2026-06-15T23:59:59Z\"\n}"
+              "raw": "{\n  \"title\": \"New Task\",\n  \"description\": \"Description of the new task\",\n  \"priority\": \"Medium\",\n  \"dueDate\": \"2026-07-15T23:59:59Z\"\n}"
             },
             "url": {
-              "raw": "http://localhost:5077/api/tasks",
+              "raw": "http://localhost:5001/api/tasks",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "5077",
+              "port": "5001",
               "path": ["api", "tasks"]
             },
-            "description": "Create a new task. UserId extracted from JWT. Status defaults to Pending."
+            "description": "Create a new task. UserId extracted from JWT. Status defaults to Pending. Priority defaults to Medium."
           },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "",
+                  "if (response.id) {",
+                  "    pm.collectionVariables.set(\"taskId\", response.id);",
+                  "    console.log(\"taskId saved:\", response.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "response": []
         },
         {
@@ -343,16 +499,16 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Implement User Authentication\",\n  \"description\": \"Create JWT-based authentication system with refresh tokens\",\n  \"status\": \"InProgress\",\n  \"priority\": \"High\",\n  \"dueDate\": \"2026-06-20T23:59:59Z\"\n}"
+              "raw": "{\n  \"title\": \"Setup Development Environment\",\n  \"description\": \"Install all necessary tools and configure the development environment\",\n  \"status\": \"Completed\",\n  \"priority\": \"High\",\n  \"dueDate\": \"2026-06-01T23:59:59Z\"\n}"
             },
             "url": {
-              "raw": "http://localhost:5077/api/tasks/{{taskId}}",
+              "raw": "http://localhost:5001/api/tasks/{{taskId}}",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "5077",
+              "port": "5001",
               "path": ["api", "tasks", "{{taskId}}"]
             },
-            "description": "Update an existing task. Must be owned by the authenticated user."
+            "description": "Update an existing task. Must be owned by the authenticated user (or any task if Manager)."
           },
           "response": []
         },
@@ -367,13 +523,13 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:5077/api/tasks/{{taskId}}",
+              "raw": "http://localhost:5001/api/tasks/{{taskId}}",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "5077",
+              "port": "5001",
               "path": ["api", "tasks", "{{taskId}}"]
             },
-            "description": "Delete a task. Must be owned by the authenticated user."
+            "description": "Delete a task. Must be owned by the authenticated user (or any task if Manager). Returns 204 No Content."
           },
           "response": []
         }
@@ -383,7 +539,7 @@
   "variable": [
     {
       "key": "userId",
-      "value": "00000000-0000-0000-0000-000000000001",
+      "value": "",
       "type": "string"
     },
     {
@@ -398,6 +554,11 @@
     },
     {
       "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "targetUserId",
       "value": "",
       "type": "string"
     }

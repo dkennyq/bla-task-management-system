@@ -1,8 +1,17 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { Task, CreateTaskDto, UpdateTaskDto, TaskStatus } from '../types/task'
+import type { Task, CreateTaskDto, UpdateTaskDto, TaskStatus, TaskPriority } from '../types/task'
 import type { ApiError } from '../types/api'
 import { getTasks, getTaskById, createTask as createTaskApi, updateTask as updateTaskApi, deleteTask as deleteTaskApi } from '../services/api'
+
+export type SortBy = 'createdAt' | 'dueDate' | 'priority' | 'title'
+export type SortOrder = 'asc' | 'desc'
+
+const priorityRank: Record<TaskPriority, number> = {
+  Low: 1,
+  Medium: 2,
+  High: 3,
+}
 
 export const useTasksStore = defineStore('tasks', () => {
   // State
@@ -12,6 +21,8 @@ export const useTasksStore = defineStore('tasks', () => {
   const error = ref<string | null>(null)
   const filter = ref<TaskStatus | 'All'>('All')
   const searchQuery = ref('')
+  const sortBy = ref<SortBy>('createdAt')
+  const sortOrder = ref<SortOrder>('desc')
 
   // Getters
   const filteredTasks = computed(() => {
@@ -31,6 +42,25 @@ export const useTasksStore = defineStore('tasks', () => {
       )
     }
 
+    // Apply sort
+    const by = sortBy.value
+    const order = sortOrder.value === 'asc' ? 1 : -1
+    result = [...result].sort((a, b) => {
+      let cmp
+      if (by === 'priority') {
+        cmp = priorityRank[a.priority] - priorityRank[b.priority]
+      } else if (by === 'dueDate') {
+        const da = a.dueDate || ''
+        const db = b.dueDate || ''
+        cmp = da.localeCompare(db)
+      } else if (by === 'title') {
+        cmp = a.title.localeCompare(b.title)
+      } else {
+        cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      }
+      return cmp * order
+    })
+
     return result
   })
 
@@ -43,15 +73,14 @@ export const useTasksStore = defineStore('tasks', () => {
   })
 
   // Actions
-  async function fetchTasks(userId: string) {
+  async function fetchTasks() {
     loading.value = true
     error.value = null
     try {
-      const data = await getTasks(userId)
+      const data = await getTasks()
       tasks.value = data
     } catch (err: unknown) {
       error.value = (err as ApiError).message || 'Failed to fetch tasks'
-      throw err
     } finally {
       loading.value = false
     }
@@ -66,7 +95,6 @@ export const useTasksStore = defineStore('tasks', () => {
       return data
     } catch (err: unknown) {
       error.value = (err as ApiError).message || 'Failed to fetch task'
-      throw err
     } finally {
       loading.value = false
     }
@@ -127,6 +155,14 @@ export const useTasksStore = defineStore('tasks', () => {
     searchQuery.value = query
   }
 
+  function setSortBy(by: SortBy) {
+    sortBy.value = by
+  }
+
+  function setSortOrder(order: SortOrder) {
+    sortOrder.value = order
+  }
+
   function clearError() {
     error.value = null
   }
@@ -139,6 +175,8 @@ export const useTasksStore = defineStore('tasks', () => {
     error,
     filter,
     searchQuery,
+    sortBy,
+    sortOrder,
     // Getters
     filteredTasks,
     tasksByStatus,
@@ -150,6 +188,8 @@ export const useTasksStore = defineStore('tasks', () => {
     deleteTask,
     setFilter,
     setSearchQuery,
+    setSortBy,
+    setSortOrder,
     clearError,
   }
 })

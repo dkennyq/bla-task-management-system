@@ -100,6 +100,8 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IRegisterUserCommandHandler, RegisterUserCommandHandler>();
 builder.Services.AddScoped<IGetCurrentUserQueryHandler, GetCurrentUserQueryHandler>();
 builder.Services.AddScoped<IGetUsersQueryHandler, GetUsersQueryHandler>();
+builder.Services.AddScoped<IUpdateUserCommandHandler, UpdateUserCommandHandler>();
+builder.Services.AddScoped<IResetPasswordCommandHandler, ResetPasswordCommandHandler>();
 
     // CORS (for development)
     builder.Services.AddCors(options =>
@@ -131,6 +133,8 @@ builder.Services.AddScoped<IGetUsersQueryHandler, GetUsersQueryHandler>();
     app.UseAuthorization();
 
     app.MapControllers();
+
+    Log.Information("Users API listening on: {Urls}", string.Join(", ", app.Urls));
 
     app.Run();
 

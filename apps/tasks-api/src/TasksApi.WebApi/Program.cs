@@ -133,6 +133,8 @@ try
 
     app.MapControllers();
 
+    Log.Information("Tasks API listening on: {Urls}", string.Join(", ", app.Urls));
+
     app.Run();
 
     return 0;

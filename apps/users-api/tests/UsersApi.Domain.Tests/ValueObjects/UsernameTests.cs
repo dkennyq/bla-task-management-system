@@ -9,6 +9,8 @@ public class UsernameTests
     [InlineData("user123")]
     [InlineData("john_doe")]
     [InlineData("test-user")]
+    [InlineData("user.name")]
+    [InlineData("user@name")]
     [InlineData("abc")]
     public void Constructor_ShouldCreate_WhenValid(string validUsername)
     {
@@ -46,8 +48,6 @@ public class UsernameTests
     [Theory]
     [InlineData("user name")]
     [InlineData("user!name")]
-    [InlineData("user.name")]
-    [InlineData("user@name")]
     public void Constructor_ShouldThrow_WhenInvalidCharacters(string invalidUsername)
     {
         Action act = () => new Username(invalidUsername);

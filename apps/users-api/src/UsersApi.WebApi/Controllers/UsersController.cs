@@ -17,13 +17,17 @@ public class UsersController : ControllerBase
     private readonly IRegisterUserCommandHandler _registerHandler;
     private readonly IGetCurrentUserQueryHandler _getCurrentUserHandler;
     private readonly IGetUsersQueryHandler _getUsersHandler;
+    private readonly IUpdateUserCommandHandler _updateUserHandler;
+    private readonly IResetPasswordCommandHandler _resetPasswordHandler;
 
-    public UsersController(IAuthService authService, IRegisterUserCommandHandler registerHandler, IGetCurrentUserQueryHandler getCurrentUserHandler, IGetUsersQueryHandler getUsersHandler)
+    public UsersController(IAuthService authService, IRegisterUserCommandHandler registerHandler, IGetCurrentUserQueryHandler getCurrentUserHandler, IGetUsersQueryHandler getUsersHandler, IUpdateUserCommandHandler updateUserHandler, IResetPasswordCommandHandler resetPasswordHandler)
     {
         _authService = authService;
         _registerHandler = registerHandler;
         _getCurrentUserHandler = getCurrentUserHandler;
         _getUsersHandler = getUsersHandler;
+        _updateUserHandler = updateUserHandler;
+        _resetPasswordHandler = resetPasswordHandler;
     }
 
     [HttpPost("register")]
@@ -96,6 +100,60 @@ public class UsersController : ControllerBase
         catch (NotFoundException ex)
         {
             return NotFound(new { message = ex.Message });
+        }
+    }
+
+    [Authorize]
+    [HttpPut("me")]
+    public async Task<ActionResult<UserDto>> UpdateMe([FromBody] UpdateUserCommand command)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userIdClaim is null || !Guid.TryParse(userIdClaim, out var userId))
+            return Unauthorized(new { message = "Invalid token" });
+
+        try
+        {
+            var user = await _updateUserHandler.Handle(userId, command);
+            return Ok(user);
+        }
+        catch (NotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (ConflictException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [Authorize]
+    [HttpPost("me/reset-password")]
+    public async Task<ActionResult<UserDto>> ResetPassword([FromBody] ResetPasswordCommand command)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userIdClaim is null || !Guid.TryParse(userIdClaim, out var userId))
+            return Unauthorized(new { message = "Invalid token" });
+
+        try
+        {
+            var user = await _resetPasswordHandler.Handle(userId, command);
+            return Ok(user);
+        }
+        catch (NotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
     }
 }

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { User, LoginRequest, RegisterRequest } from '../types/user'
+import type { ApiError } from '../types/api'
 import { login as loginApi, register as registerApi, getCurrentUser } from '../services/api'
 
 export const useAuthStore = defineStore('auth', () => {
@@ -25,8 +26,20 @@ export const useAuthStore = defineStore('auth', () => {
       localStorage.setItem('token', response.token)
       localStorage.setItem('user', JSON.stringify(response.user))
       return response
-    } catch (err: any) {
-      error.value = err.message || 'Login failed'
+    } catch (err: unknown) {
+      const apiErr = err as ApiError
+      const status = apiErr?.statusCode
+      console.error('[AuthStore] Login failed:', status, apiErr?.message || apiErr)
+
+      if (status === 401) {
+        error.value = 'Invalid email or password.'
+      } else if (status === 500) {
+        error.value = 'Server error. Please try again later.'
+      } else if (status === 0 || !status) {
+        error.value = 'Network error. Please check your connection.'
+      } else {
+        error.value = 'Login failed. Please try again.'
+      }
       throw err
     } finally {
       loading.value = false
@@ -39,8 +52,22 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const response = await registerApi(data)
       return response
-    } catch (err: any) {
-      error.value = err.message || 'Registration failed'
+    } catch (err: unknown) {
+      const apiErr = err as ApiError
+      const status = apiErr?.statusCode
+      console.error('[AuthStore] Register failed:', status, apiErr?.message || apiErr)
+
+      if (status === 409) {
+        error.value = apiErr?.message || 'Username or email already taken.'
+      } else if (status === 400) {
+        error.value = 'Invalid input. Please check your details.'
+      } else if (status === 500) {
+        error.value = 'Server error. Please try again later.'
+      } else if (status === 0 || !status) {
+        error.value = 'Network error. Please check your connection.'
+      } else {
+        error.value = apiErr?.message || 'Registration failed.'
+      }
       throw err
     } finally {
       loading.value = false
@@ -56,8 +83,9 @@ export const useAuthStore = defineStore('auth', () => {
       const userData = await getCurrentUser()
       user.value = userData
       localStorage.setItem('user', JSON.stringify(userData))
-    } catch (err: any) {
-      error.value = err.message || 'Failed to fetch user'
+    } catch (err: unknown) {
+      const apiErr = err as ApiError
+      console.error('[AuthStore] Fetch user failed:', apiErr?.statusCode, apiErr?.message || apiErr)
       logout()
     } finally {
       loading.value = false

@@ -142,4 +142,20 @@ public class UserRepository : IUserRepository
 
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
+
+    public async Task UpdateAsync(UserEntity user, CancellationToken cancellationToken = default)
+    {
+        await using var connection = new NpgsqlConnection(_connectionString);
+        await connection.OpenAsync(cancellationToken);
+
+        const string sql = "UPDATE users SET username = @Username, full_name = @FullName, email = @Email, password_hash = @PasswordHash WHERE id = @Id";
+        await using var command = new NpgsqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@Id", user.Id);
+        command.Parameters.AddWithValue("@Username", user.Username);
+        command.Parameters.AddWithValue("@FullName", user.FullName);
+        command.Parameters.AddWithValue("@Email", user.Email);
+        command.Parameters.AddWithValue("@PasswordHash", user.PasswordHash);
+
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
 }

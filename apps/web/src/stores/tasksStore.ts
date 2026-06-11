@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { Task, CreateTaskDto, UpdateTaskDto, TaskStatus } from '../types/task'
+import type { ApiError } from '../types/api'
 import { getTasks, getTaskById, createTask as createTaskApi, updateTask as updateTaskApi, deleteTask as deleteTaskApi } from '../services/api'
 
 export const useTasksStore = defineStore('tasks', () => {
@@ -48,8 +49,8 @@ export const useTasksStore = defineStore('tasks', () => {
     try {
       const data = await getTasks(userId)
       tasks.value = data
-    } catch (err: any) {
-      error.value = err.message || 'Failed to fetch tasks'
+    } catch (err: unknown) {
+      error.value = (err as ApiError).message || 'Failed to fetch tasks'
       throw err
     } finally {
       loading.value = false
@@ -63,8 +64,8 @@ export const useTasksStore = defineStore('tasks', () => {
       const data = await getTaskById(id)
       currentTask.value = data
       return data
-    } catch (err: any) {
-      error.value = err.message || 'Failed to fetch task'
+    } catch (err: unknown) {
+      error.value = (err as ApiError).message || 'Failed to fetch task'
       throw err
     } finally {
       loading.value = false
@@ -78,8 +79,8 @@ export const useTasksStore = defineStore('tasks', () => {
       const newTask = await createTaskApi(task)
       tasks.value.push(newTask)
       return newTask
-    } catch (err: any) {
-      error.value = err.message || 'Failed to create task'
+    } catch (err: unknown) {
+      error.value = (err as ApiError).message || 'Failed to create task'
       throw err
     } finally {
       loading.value = false
@@ -96,8 +97,8 @@ export const useTasksStore = defineStore('tasks', () => {
         tasks.value[index] = updatedTask
       }
       return updatedTask
-    } catch (err: any) {
-      error.value = err.message || 'Failed to update task'
+    } catch (err: unknown) {
+      error.value = (err as ApiError).message || 'Failed to update task'
       throw err
     } finally {
       loading.value = false
@@ -110,8 +111,8 @@ export const useTasksStore = defineStore('tasks', () => {
     try {
       await deleteTaskApi(id)
       tasks.value = tasks.value.filter(t => t.id !== id)
-    } catch (err: any) {
-      error.value = err.message || 'Failed to delete task'
+    } catch (err: unknown) {
+      error.value = (err as ApiError).message || 'Failed to delete task'
       throw err
     } finally {
       loading.value = false

@@ -23,10 +23,10 @@
               "raw": "{\n  \"username\": \"johndoe\",\n  \"fullName\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePass123!\"\n}"
             },
             "url": {
-              "raw": "http://localhost:5078/api/users/register",
+              "raw": "http://localhost:5034/api/users/register",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "5078",
+              "port": "5034",
               "path": ["api", "users", "register"]
             },
             "description": "Register a new user. Returns JWT access token + refresh token."
@@ -40,14 +40,14 @@
                   "",
                   "if (response.token) {",
                   "    pm.collectionVariables.set(\"jwt_token\", response.token);",
-                  "    console.log(\"✅ jwt_token saved:\", response.token.substring(0, 30) + \"...\");",
+                  "    console.log(\"jwt_token saved:\", response.token.substring(0, 30) + \"...\");",
                   "} else {",
                   "    console.error(\"there is no token in the response.\");",
                   "}",
                   "",
                   "if (response.refreshToken) {",
                   "    pm.collectionVariables.set(\"refresh_token\", response.refreshToken);",
-                  "    console.log(\"✅ refresh_token saved\");",
+                  "    console.log(\"refresh_token saved\");",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -62,10 +62,10 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:5078/api/users?page=1&pageSize=10",
+              "raw": "http://localhost:5034/api/users?page=1&pageSize=10",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "5078",
+              "port": "5034",
               "path": ["api", "users"],
               "query": [
                 { "key": "page", "value": "1" },
@@ -91,10 +91,10 @@
               "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"SecurePass123!\"\n}"
             },
             "url": {
-              "raw": "http://localhost:5078/api/users/login",
+              "raw": "http://localhost:5034/api/users/login",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "5078",
+              "port": "5034",
               "path": ["api", "users", "login"]
             },
             "description": "Login with email/password. Returns token, refreshToken, expiresAt, userId, email, fullName."
@@ -108,14 +108,14 @@
                   "",
                   "if (response.token) {",
                   "    pm.collectionVariables.set(\"jwt_token\", response.token);",
-                  "    console.log(\"✅ jwt_token saved:\", response.token.substring(0, 30) + \"...\");",
+                  "    console.log(\"jwt_token saved:\", response.token.substring(0, 30) + \"...\");",
                   "} else {",
                   "    console.error(\"there is no token in the response.\");",
                   "}",
                   "",
                   "if (response.refreshToken) {",
                   "    pm.collectionVariables.set(\"refresh_token\", response.refreshToken);",
-                  "    console.log(\"✅ refresh_token saved\");",
+                  "    console.log(\"refresh_token saved\");",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -139,10 +139,10 @@
               "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
             },
             "url": {
-              "raw": "http://localhost:5078/api/users/refresh",
+              "raw": "http://localhost:5034/api/users/refresh",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "5078",
+              "port": "5034",
               "path": ["api", "users", "refresh"]
             },
             "description": "Exchange a refresh token for a new JWT access token + new refresh token."
@@ -156,14 +156,14 @@
                   "",
                   "if (response.token) {",
                   "    pm.collectionVariables.set(\"jwt_token\", response.token);",
-                  "    console.log(\"✅ jwt_token saved:\", response.token.substring(0, 30) + \"...\");",
+                  "    console.log(\"jwt_token saved:\", response.token.substring(0, 30) + \"...\");",
                   "} else {",
                   "    console.error(\"there is no token in the response.\");",
                   "}",
                   "",
                   "if (response.refreshToken) {",
                   "    pm.collectionVariables.set(\"refresh_token\", response.refreshToken);",
-                  "    console.log(\"✅ refresh_token saved\");",
+                  "    console.log(\"refresh_token saved\");",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -183,13 +183,71 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:5078/api/users/me",
+              "raw": "http://localhost:5034/api/users/me",
               "protocol": "http",
               "host": ["localhost"],
-              "port": "5078",
+              "port": "5034",
               "path": ["api", "users", "me"]
             },
             "description": "Get current authenticated user's profile from database. Returns id, username, fullName, email, createdAt."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Current User (Me)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"johndoe_updated\",\n  \"fullName\": \"John Doe Updated\",\n  \"email\": \"john.updated@example.com\",\n  \"currentPassword\": \"SecurePass123!\",\n  \"newPassword\": \"NewSecurePass456!\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5034/api/users/me",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5034",
+              "path": ["api", "users", "me"]
+            },
+            "description": "Update current user's profile (username, fullName, email) and optionally change password. Requires currentPassword when setting newPassword. All fields optional."
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newPassword\": \"NewSecurePass456!\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5034/api/users/me/reset-password",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5034",
+              "path": ["api", "users", "me", "reset-password"]
+            },
+            "description": "Reset current user's password without requiring current password. New password must meet complexity requirements (8+ chars, upper, lower, digit, special)."
           },
           "response": []
         }

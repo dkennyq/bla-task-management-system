@@ -1391,21 +1391,44 @@ No usar EF, Dapper o Mediator. Genera un plan inicial.
 ## 🔒 US-18: Role-Based Access Control (RBAC) - Manager & Operator Roles
 
 **User Story:**  
-As a system administrator, I want to assign roles to users (Manager and Operator), so that Managers can view all tasks in the system while Operators only see their own tasks.
+As a system administrator (Manager), I want to control user access through roles (Manager and Operator), so that Managers can manage users and view all tasks, while Operators have restricted access to only their own tasks.
 
 **GitHub Issue**: [#34](https://github.com/dkennyq/bla-task-management-system/issues/34)
 
 ### Acceptance Criteria
-1. ✅ Database has `role` column in `users` table with CHECK constraint
-2. ✅ New users default to "Operator" role when role not specified
-3. ✅ JWT token includes "role" claim
-4. ✅ Manager users can call GET /api/tasks and see ALL tasks from all users
-5. ✅ Operator users can call GET /api/tasks and see ONLY their own tasks
-6. ✅ Registration endpoint accepts optional `role` parameter
-7. ✅ GET /api/users/me returns user's role
-8. ✅ Invalid role values are rejected with 400 Bad Request
+1. ✅ Database has `role` column in `users` table with CHECK constraint ('Manager', 'Operator')
+2. ✅ At least ONE Manager user exists in seed data (admin@taskmanagement.com)
+3. ✅ Public registration (POST /api/users/register) ALWAYS creates Operator role
+4. ✅ Public registration ignores any role parameter sent in request
+5. ✅ JWT token includes "role" claim for all authenticated requests
+6. ✅ Manager users can access admin endpoints (GET /api/users, POST /api/users/admin/create, PUT /api/users/admin/{id}/role)
+7. ✅ Operator users receive 403 Forbidden when trying to access admin endpoints
+8. ✅ Manager can create new users with Manager or Operator role via admin endpoint
+9. ✅ Manager can change existing user roles via admin endpoint
+10. ✅ Manager CANNOT change their own role (returns 400 Bad Request)
+11. ✅ System prevents downgrading last Manager to Operator (returns 400 Bad Request)
+12. ✅ Manager users can call GET /api/tasks and see ALL tasks from all users
+13. ✅ Operator users can call GET /api/tasks and see ONLY their own tasks
+14. ✅ GET /api/users/me returns user's role
+15. ✅ "User Management" link visible in navbar ONLY for Manager users
+16. ✅ Operator users cannot navigate to /admin/users (redirected to dashboard)
 
 ### Technical Details
+
+#### User Creation Flow
+
+**Public Self-Registration (Login Screen):**
+- Endpoint: `POST /api/users/register`
+- Accessible without authentication
+- **ALWAYS creates Operator role** (no role parameter allowed)
+- Shown on login page as "Register" button
+
+**Manager-Only User Creation (Admin Panel):**
+- Endpoint: `POST /api/users/admin/create` (NEW)
+- **Requires Manager role** (`[Authorize(Roles = "Manager")]`)
+- Can create Manager OR Operator users
+- Can specify role in request
+- Accessible via admin UI (button in navbar/dashboard)
 
 #### API: PostgreSQL Database Migration
 **Migration File**: `infrastructure/database/postgres/04-migration-add-user-roles.sql`
@@ -1419,30 +1442,105 @@ ADD CONSTRAINT chk_user_role
 CHECK (role IN ('Manager', 'Operator'));
 
 CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+
+-- Ensure at least one Manager exists
+UPDATE users SET role = 'Manager' WHERE email = 'admin@taskmanagement.com';
 ```
 
-#### API: Users API - Update Response
+#### API: Users API - Public Registration (NO ROLE PARAMETER)
 **Endpoint**: `POST /api/users/register`
 
-**Request (Updated):**
+**Request (NO role field):**
 ```json
 {
   "username": "string",
   "email": "string",
   "password": "string",
-  "fullName": "string",
-  "role": "Manager" | "Operator"  // OPTIONAL, defaults to "Operator"
+  "fullName": "string"
+  // NO ROLE PARAMETER - always creates Operator
 }
 ```
 
-**Response (Updated):**
+**Response:**
 ```json
 {
   "id": "guid",
   "username": "string",
   "email": "string",
   "fullName": "string",
-  "role": "Operator"  // NEW
+  "role": "Operator"  // ALWAYS "Operator" for public registration
+}
+```
+
+#### API: Users API - Admin User Creation (NEW)
+**Endpoint**: `POST /api/users/admin/create`
+**Authorization**: Requires Manager role
+
+**Request:**
+```json
+{
+  "username": "string",
+  "email": "string",
+  "password": "string",
+  "fullName": "string",
+  "role": "Manager" | "Operator"  // REQUIRED, Manager can choose
+}
+```
+
+**Response:**
+```json
+{
+  "id": "guid",
+  "username": "string",
+  "email": "string",
+  "fullName": "string",
+  "role": "Manager" | "Operator"
+}
+```
+
+**Status Codes:**
+- `201 Created`: User created successfully
+- `400 Bad Request`: Validation error
+- `401 Unauthorized`: Missing JWT token
+- `403 Forbidden`: User is not Manager
+
+#### API: Users API - Update User Role (NEW)
+**Endpoint**: `PUT /api/users/admin/{id}/role`
+**Authorization**: Requires Manager role
+
+**Request:**
+```json
+{
+  "role": "Manager" | "Operator"
+}
+```
+
+**Business Rules:**
+- Manager CANNOT change their own role (prevent lockout)
+- Must have at least ONE Manager in the system
+
+#### API: Users API - List All Users (NEW)
+**Endpoint**: `GET /api/users`
+**Authorization**: Requires Manager role
+**Query Parameters:** `page` (default: 1), `pageSize` (default: 10)
+
+**Response:**
+```json
+{
+  "users": [
+    {
+      "id": "guid",
+      "username": "string",
+      "email": "string",
+      "fullName": "string",
+      "role": "Manager" | "Operator",
+      "isActive": true,
+      "createdAt": "ISO 8601 datetime"
+    }
+  ],
+  "totalCount": 42,
+  "page": 1,
+  "pageSize": 10
 }
 ```
 
@@ -1454,128 +1552,116 @@ CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
 - **If role = "Manager"**: Return ALL tasks in the system (no userId filter)
 - **If role = "Operator"**: Return only tasks where `userId` matches
 
-**Response (unchanged):**
-```json
-[
-  {
-    "id": "guid",
-    "title": "string",
-    "description": "string",
-    "status": "Pending" | "InProgress" | "Completed",
-    "priority": "Low" | "Medium" | "High",
-    "dueDate": "ISO 8601 date",
-    "userId": "guid",  // Shows which user created the task
-    "createdAt": "ISO 8601 datetime",
-    "updatedAt": "ISO 8601 datetime"
-  }
-]
+```csharp
+// Query Logic
+if (userRole == "Manager")
+{
+    tasks = await _repository.GetAllAsync(cancellationToken);
+}
+else // Operator
+{
+    tasks = await _repository.GetAllByUserIdAsync(userId, cancellationToken);
+}
 ```
+
+#### Frontend: User Management Page (NEW)
+**Route**: `/admin/users` (Manager only)
+
+**Features:**
+- Paginated list of all users (table: username, email, full name, role, actions)
+- "Create User" button at top
+- "Edit Role" button for each user (except current user)
+- Role badges (Manager = green, Operator = blue)
+
+**Navigation:**
+- "User Management" link in navbar (visible ONLY for Manager users)
+- Route guard: redirects Operators to dashboard if they try to access /admin/users
 
 ### Implementation Guide (TDD)
 
-#### Phase 1: Database & Domain Layer (Users API)
-1. **Database Migration** (Infrastructure)
-   - Create `infrastructure/database/postgres/04-migration-add-user-roles.sql`
-   - Add `role` column with DEFAULT 'Operator'
-   - Add CHECK constraint for valid roles
-   - Update seed data: admin user = 'Manager'
+#### Phase 1: Database & Backend - Role Foundation
+1. **Create migration** (`04-migration-add-user-roles.sql`)
+   - Add `role` column, CHECK constraint, index
+   - Update seed data: ensure admin@taskmanagement.com is Manager
 
 2. **Domain Layer** (Users API)
-   - Create `UsersApi.Domain/Enums/UserRole.cs` enum
-   - Update `UserEntity.cs`: Add `UserRole Role` property
-   - Write tests FIRST:
-     - `Constructor_ShouldSetRoleToOperator_WhenNotProvided()`
-     - `Constructor_ShouldSetRoleToManager_WhenProvided()`
-   - Run tests (RED)
-   - Update constructor to accept `UserRole role` parameter
-   - Run tests (GREEN)
+   - Create `UserRole` enum (Manager, Operator)
+   - Update `UserEntity`: Add `Role` property, update constructor
+   - Tests: Verify role validation, default to Operator
 
-#### Phase 2: Application Layer (Users API)
-1. **Commands**
-   - Update `RegisterUserCommand`: Add `UserRole Role` property
-   - Update `RegisterUserCommandHandler`: Pass role to entity
-   - Write tests FIRST:
-     - `Handle_ShouldRegisterOperatorUser_WhenRoleNotProvided()`
-     - `Handle_ShouldRegisterManagerUser_WhenRoleIsManager()`
+3. **Application Layer** (Users API)
+   - Update `RegisterUserCommand`: **REMOVE** role parameter (force Operator)
+   - Update DTOs: Add role property to responses
 
-2. **Queries**
-   - Update `UserDto`: Add `string Role` property
-   - Update `GetUserByIdQueryHandler`: Map `user.Role` to DTO
+4. **Infrastructure Layer** (Users API)
+   - Update `UserRepository`: Read/write role column
+   - Update `JwtService`: Add role claim to JWT token
 
-#### Phase 3: Infrastructure Layer (Users API)
-1. **Repository**
-   - Update `UserRepository.MapReader()`: Read `role` from DB, convert to enum
-   - Update `UserRepository.AddAsync()`: Insert `role` column
-   - Write tests FIRST:
-     - `AddAsync_ShouldPersistUserWithRole()`
-     - `GetByIdAsync_ShouldReturnUserWithCorrectRole()`
+#### Phase 2: Backend - Admin Endpoints (NEW)
+1. **Create AdminController** (Users API)
+   - Add `[Authorize(Roles = "Manager")]` at controller level
+   - Implement POST `/api/users/admin/create` (create user with role)
+   - Implement PUT `/api/users/admin/{id}/role` (update role)
+   - Implement GET `/api/users` (list all users)
 
-2. **JWT Service**
-   - Update `JwtService.GenerateToken()`: Add role claim
-   ```csharp
-   new Claim("role", user.Role.ToString())
-   ```
-   - Write test: `GenerateToken_ShouldIncludeRoleClaim()`
+2. **Application Layer Commands/Queries**
+   - Create `CreateUserByAdminCommand` + Handler
+   - Create `UpdateUserRoleCommand` + Handler (with self-change prevention)
+   - Create `GetAllUsersQuery` + Handler
 
-#### Phase 4: WebApi Layer (Users API)
-1. **DTOs**
-   - Update `RegisterRequest`: Add `string? Role` property (optional)
-   - Update `UserResponse`: Add `string Role` property
+3. **Tests**
+   - Test admin endpoints reject Operator users (403 Forbidden)
+   - Test self-role-change prevention
+   - Test last-Manager protection
 
-2. **Controller**
-   - Update `UsersController.Register()`:
-     - Validate role value (must be "Manager" or "Operator")
-     - Default to "Operator" if not provided
-   - Update `UsersController.GetMe()`: Include role in response
-   - Write tests:
-     - `Register_ShouldReturnBadRequest_WhenInvalidRole()`
-     - `Register_ShouldCreateOperator_WhenRoleNotProvided()`
+#### Phase 3: Backend - Tasks API Role Awareness
+1. **Update Query Logic**
+   - Add `UserRole` property to `GetAllTasksQuery`
+   - Update `GetAllTasksQueryHandler`: Branch on role
+   - Implement `ITaskRepository.GetAllAsync()` (no userId filter)
 
-#### Phase 5: Tasks API - Query Logic
-1. **Application Layer**
-   - Update `GetAllTasksQuery`: Add `string UserRole` property
-   - Update `GetAllTasksQueryHandler.Handle()`:
-     ```csharp
-     if (query.UserRole == "Manager")
-         return await _repository.GetAllAsync(cancellationToken);
-     else
-         return await _repository.GetAllByUserIdAsync(query.UserId, cancellationToken);
-     ```
-   - Write tests:
-     - `Handle_ShouldReturnAllTasks_WhenUserIsManager()`
-     - `Handle_ShouldReturnOnlyUserTasks_WhenUserIsOperator()`
+2. **Update Controller**
+   - Extract role from JWT token
+   - Pass role to query
 
-2. **Infrastructure Layer**
-   - Add `ITaskRepository.GetAllAsync()` method
-   - Implement in `MongoTaskRepository`:
-     ```csharp
-     public async Task<IEnumerable<TaskEntity>> GetAllAsync(CancellationToken cancellationToken)
-     {
-         return await _collection.Find(_ => true).ToListAsync(cancellationToken);
-     }
-     ```
+#### Phase 4: Frontend - User Management UI
+1. **Update Auth Store**
+   - Add `role` to state
+   - Add `isManager()` computed property
 
-3. **WebApi Layer**
-   - Update `TasksController.GetAllTasks()`:
-     - Extract role from JWT: `GetUserRole()` helper method
-     - Pass role to query
-   - Write tests: `GetAllTasks_ShouldCallHandlerWithManagerRole_WhenUserIsManager()`
+2. **Create UserManagementView**
+   - Table with user list (paginated)
+   - "Create User" button → opens modal
+   - "Edit Role" button per user → opens modal
+
+3. **Create Modals**
+   - `CreateUserModal.vue`: Form with role dropdown
+   - `EditUserRoleModal.vue`: Role dropdown, prevent self-change
+
+4. **Update Navbar**
+   - Add "User Management" link (visible only for Manager)
+
+5. **Update Router**
+   - Add `/admin/users` route with Manager guard
 
 ### Files to Create/Modify
 
-**Create New (2):**
-1. `infrastructure/database/postgres/04-migration-add-user-roles.sql`
-2. `apps/users-api/src/UsersApi.Domain/Enums/UserRole.cs`
+**Create New (19 files):**
+- Backend: 13 files (migration, enums, commands, queries, controller, DTOs)
+- Frontend: 6 files (views, components, services, tests)
 
-**Modify Existing (24):**
-- Users API: 16 files (Domain, Application, Infrastructure, WebApi layers + tests)
-- Tasks API: 8 files (Application, Infrastructure, WebApi layers + tests)
+**Modify Existing (35 files):**
+- Backend: 20 files (entities, repositories, services, controllers + tests)
+- Frontend: 9 files (auth store, router, navbar, registration + tests)
+- Database: 1 file (seed data)
+
+**Total: 54 files**
 
 ### Dependencies
 - ✅ Users API with registration (Issue #5)
 - ✅ JWT authentication (Issue #19)
 - ✅ Tasks API baseline
-- 🔲 **Blocks**: Issue #35 (Real-Time Updates)
+- 🔲 **Blocks**: Issue #35 (Real-Time Updates - needs role awareness)
 
 ---
 

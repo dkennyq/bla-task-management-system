@@ -29,4 +29,24 @@ public class UserEntity
         PasswordHash = passwordHash;
         CreatedAt = DateTime.UtcNow;
     }
+
+    public void UpdateProfile(string? username, string? fullName, string? email)
+    {
+        if (!string.IsNullOrWhiteSpace(username))
+            Username = new Username(username).Value;
+
+        if (!string.IsNullOrWhiteSpace(fullName))
+            FullName = fullName;
+
+        if (!string.IsNullOrWhiteSpace(email))
+            Email = new Email(email).Value;
+    }
+
+    public void UpdatePassword(string newPasswordHash)
+    {
+        if (string.IsNullOrWhiteSpace(newPasswordHash))
+            throw new ArgumentException("Password hash cannot be empty", nameof(newPasswordHash));
+
+        PasswordHash = newPasswordHash;
+    }
 }

@@ -10,7 +10,7 @@ import type { ApiError } from "../types/api";
 export const TASKS_API_URL =
   import.meta.env.VITE_TASKS_API_URL || "http://localhost:5077/api";
 export const USERS_API_URL =
-  import.meta.env.VITE_USERS_API_URL || "http://localhost:5078/api";
+  import.meta.env.VITE_USERS_API_URL || "http://localhost:5034/api";
 
 // Create Axios instances
 export const tasksApiClient: AxiosInstance = axios.create({
@@ -39,8 +39,13 @@ const requestInterceptor = (config: InternalAxiosRequestConfig) => {
 // Response error interceptor
 const responseErrorInterceptor = (error: AxiosError) => {
   if (error.response) {
+    const data = error.response.data
+    const message = typeof data === 'string'
+      ? data
+      : (data as Record<string, unknown>)?.message as string || error.message
+
     const apiError: ApiError = {
-      message: (error.response.data as string) || error.message,
+      message,
       statusCode: error.response.status,
     };
 

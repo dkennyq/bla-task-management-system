@@ -100,6 +100,8 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IRegisterUserCommandHandler, RegisterUserCommandHandler>();
 builder.Services.AddScoped<IGetCurrentUserQueryHandler, GetCurrentUserQueryHandler>();
 builder.Services.AddScoped<IGetUsersQueryHandler, GetUsersQueryHandler>();
+builder.Services.AddScoped<IUpdateUserCommandHandler, UpdateUserCommandHandler>();
+builder.Services.AddScoped<IResetPasswordCommandHandler, ResetPasswordCommandHandler>();
 
     // CORS (for development)
     builder.Services.AddCors(options =>

@@ -20,13 +20,13 @@ public partial class Username
             throw new ArgumentException("Username cannot exceed 50 characters", nameof(value));
 
         if (!UsernameRegex.IsMatch(value))
-            throw new ArgumentException("Username can only contain letters, numbers, underscores, and hyphens", nameof(value));
+            throw new ArgumentException("Username can only contain letters, numbers, underscores, hyphens, dots, and at signs", nameof(value));
 
         Value = value;
     }
 
     public override string ToString() => Value;
 
-    [GeneratedRegex(@"^[a-zA-Z0-9_-]+$")]
+    [GeneratedRegex(@"^[a-zA-Z0-9_.@-]+$")]
     private static partial Regex ValidUsernamePattern();
 }

@@ -18,6 +18,8 @@ public class UsersControllerTests
     private readonly Mock<IRegisterUserCommandHandler> _registerHandlerMock;
     private readonly Mock<IGetCurrentUserQueryHandler> _getCurrentUserHandlerMock;
     private readonly Mock<IGetUsersQueryHandler> _getUsersHandlerMock;
+    private readonly Mock<IUpdateUserCommandHandler> _updateUserHandlerMock;
+    private readonly Mock<IResetPasswordCommandHandler> _resetPasswordHandlerMock;
     private readonly UsersController _controller;
 
     public UsersControllerTests()
@@ -26,7 +28,9 @@ public class UsersControllerTests
         _registerHandlerMock = new Mock<IRegisterUserCommandHandler>();
         _getCurrentUserHandlerMock = new Mock<IGetCurrentUserQueryHandler>();
         _getUsersHandlerMock = new Mock<IGetUsersQueryHandler>();
-        _controller = new UsersController(_authServiceMock.Object, _registerHandlerMock.Object, _getCurrentUserHandlerMock.Object, _getUsersHandlerMock.Object);
+        _updateUserHandlerMock = new Mock<IUpdateUserCommandHandler>();
+        _resetPasswordHandlerMock = new Mock<IResetPasswordCommandHandler>();
+        _controller = new UsersController(_authServiceMock.Object, _registerHandlerMock.Object, _getCurrentUserHandlerMock.Object, _getUsersHandlerMock.Object, _updateUserHandlerMock.Object, _resetPasswordHandlerMock.Object);
     }
 
     [Fact]
@@ -340,5 +344,281 @@ public class UsersControllerTests
             h => h.Handle(It.Is<GetUsersQuery>(q => q.Page == 2 && q.PageSize == 5), It.IsAny<CancellationToken>()),
             Times.Once);
         result.Result.Should().BeOfType<OkObjectResult>();
+    }
+
+    [Fact]
+    public async Task UpdateMe_ShouldReturn200_WhenProfileUpdated()
+    {
+        var userId = Guid.NewGuid();
+        var userDto = new UserDto
+        {
+            Id = userId,
+            Username = "updateduser",
+            FullName = "Updated User",
+            Email = "updated@example.com",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString())
+        };
+        var identity = new ClaimsIdentity(claims, "TestAuth");
+        var principal = new ClaimsPrincipal(identity);
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = principal }
+        };
+
+        var command = new UpdateUserCommand
+        {
+            Username = "updateduser",
+            FullName = "Updated User"
+        };
+
+        _updateUserHandlerMock
+            .Setup(h => h.Handle(userId, command, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(userDto);
+
+        var result = await _controller.UpdateMe(command);
+
+        result.Result.Should().BeOfType<OkObjectResult>();
+        var okResult = result.Result as OkObjectResult;
+        var response = okResult!.Value as UserDto;
+        response!.Username.Should().Be("updateduser");
+    }
+
+    [Fact]
+    public async Task UpdateMe_ShouldReturn401_WhenNotAuthenticated()
+    {
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal() }
+        };
+
+        var command = new UpdateUserCommand { FullName = "New Name" };
+        var result = await _controller.UpdateMe(command);
+
+        result.Result.Should().BeOfType<UnauthorizedObjectResult>();
+    }
+
+    [Fact]
+    public async Task UpdateMe_ShouldReturn400_WhenNoChanges()
+    {
+        var userId = Guid.NewGuid();
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString())
+        };
+        var identity = new ClaimsIdentity(claims, "TestAuth");
+        var principal = new ClaimsPrincipal(identity);
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = principal }
+        };
+
+        var command = new UpdateUserCommand();
+
+        _updateUserHandlerMock
+            .Setup(h => h.Handle(userId, command, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new ArgumentException("No changes detected"));
+
+        var result = await _controller.UpdateMe(command);
+
+        result.Result.Should().BeOfType<BadRequestObjectResult>();
+    }
+
+    [Fact]
+    public async Task UpdateMe_ShouldReturn404_WhenUserNotFound()
+    {
+        var userId = Guid.NewGuid();
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString())
+        };
+        var identity = new ClaimsIdentity(claims, "TestAuth");
+        var principal = new ClaimsPrincipal(identity);
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = principal }
+        };
+
+        var command = new UpdateUserCommand { FullName = "New Name" };
+
+        _updateUserHandlerMock
+            .Setup(h => h.Handle(userId, command, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new NotFoundException($"User with ID '{userId}' not found"));
+
+        var result = await _controller.UpdateMe(command);
+
+        result.Result.Should().BeOfType<NotFoundObjectResult>();
+    }
+
+    [Fact]
+    public async Task UpdateMe_ShouldReturn409_WhenUsernameTaken()
+    {
+        var userId = Guid.NewGuid();
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString())
+        };
+        var identity = new ClaimsIdentity(claims, "TestAuth");
+        var principal = new ClaimsPrincipal(identity);
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = principal }
+        };
+
+        var command = new UpdateUserCommand { Username = "takenuser" };
+
+        _updateUserHandlerMock
+            .Setup(h => h.Handle(userId, command, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new ConflictException("Username 'takenuser' is already taken"));
+
+        var result = await _controller.UpdateMe(command);
+
+        result.Result.Should().BeOfType<ConflictObjectResult>();
+    }
+
+    [Fact]
+    public async Task UpdateMe_ShouldReturn401_WhenCurrentPasswordIncorrect()
+    {
+        var userId = Guid.NewGuid();
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString())
+        };
+        var identity = new ClaimsIdentity(claims, "TestAuth");
+        var principal = new ClaimsPrincipal(identity);
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = principal }
+        };
+
+        var command = new UpdateUserCommand
+        {
+            CurrentPassword = "WrongPass123!",
+            NewPassword = "NewSecurePass456!"
+        };
+
+        _updateUserHandlerMock
+            .Setup(h => h.Handle(userId, command, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new UnauthorizedAccessException("Current password is incorrect"));
+
+        var result = await _controller.UpdateMe(command);
+
+        result.Result.Should().BeOfType<UnauthorizedObjectResult>();
+    }
+
+    [Fact]
+    public async Task ResetPassword_ShouldReturn200_WhenValid()
+    {
+        var userId = Guid.NewGuid();
+        var userDto = new UserDto
+        {
+            Id = userId,
+            Username = "johndoe",
+            FullName = "John Doe",
+            Email = "john@example.com",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString())
+        };
+        var identity = new ClaimsIdentity(claims, "TestAuth");
+        var principal = new ClaimsPrincipal(identity);
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = principal }
+        };
+
+        var command = new ResetPasswordCommand { NewPassword = "NewSecurePass456!" };
+
+        _resetPasswordHandlerMock
+            .Setup(h => h.Handle(userId, command, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(userDto);
+
+        var result = await _controller.ResetPassword(command);
+
+        result.Result.Should().BeOfType<OkObjectResult>();
+        var okResult = result.Result as OkObjectResult;
+        var response = okResult!.Value as UserDto;
+        response!.Username.Should().Be("johndoe");
+    }
+
+    [Fact]
+    public async Task ResetPassword_ShouldReturn401_WhenNotAuthenticated()
+    {
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal() }
+        };
+
+        var command = new ResetPasswordCommand { NewPassword = "NewSecurePass456!" };
+        var result = await _controller.ResetPassword(command);
+
+        result.Result.Should().BeOfType<UnauthorizedObjectResult>();
+    }
+
+    [Fact]
+    public async Task ResetPassword_ShouldReturn404_WhenUserNotFound()
+    {
+        var userId = Guid.NewGuid();
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString())
+        };
+        var identity = new ClaimsIdentity(claims, "TestAuth");
+        var principal = new ClaimsPrincipal(identity);
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = principal }
+        };
+
+        var command = new ResetPasswordCommand { NewPassword = "NewSecurePass456!" };
+
+        _resetPasswordHandlerMock
+            .Setup(h => h.Handle(userId, command, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new NotFoundException($"User with ID '{userId}' not found"));
+
+        var result = await _controller.ResetPassword(command);
+
+        result.Result.Should().BeOfType<NotFoundObjectResult>();
+    }
+
+    [Fact]
+    public async Task ResetPassword_ShouldReturn400_WhenPasswordWeak()
+    {
+        var userId = Guid.NewGuid();
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString())
+        };
+        var identity = new ClaimsIdentity(claims, "TestAuth");
+        var principal = new ClaimsPrincipal(identity);
+
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext { User = principal }
+        };
+
+        var command = new ResetPasswordCommand { NewPassword = "short" };
+
+        _resetPasswordHandlerMock
+            .Setup(h => h.Handle(userId, command, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new ArgumentException("Password must be at least 8 characters"));
+
+        var result = await _controller.ResetPassword(command);
+
+        result.Result.Should().BeOfType<BadRequestObjectResult>();
     }
 }

@@ -4,11 +4,11 @@ import { createPinia, Pinia, setActivePinia } from 'pinia'
 import type { Component } from 'vue'
 
 export interface MountOptions {
-  props?: Record<string, any>
+  props?: Record<string, unknown>
   global?: {
-    plugins?: any[]
-    stubs?: Record<string, any>
-    mocks?: Record<string, any>
+    plugins?: unknown[]
+    stubs?: Record<string, unknown>
+    mocks?: Record<string, unknown>
   }
 }
 

@@ -8,6 +8,12 @@
 *.userosscache
 *.sln.docstates
 
+# Development workflow notes (local only)
+docs/DEVELOPMENT_WORKFLOW.md
+
+# Makefile (project-specific, not versioned)
+Makefile
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/

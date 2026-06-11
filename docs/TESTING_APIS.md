@@ -1,296 +1,133 @@
-# 🧪 Testing APIs - BLA Task Management System
+# Testing APIs
 
-This document contains instructions to run and test the system's APIs.
+Use the Docker stack when testing APIs. The recommended workflow is to run **all services in containers**, then exercise the APIs through Swagger, Postman, or `curl` against the published host ports.
 
-## 📋 Table of Contents
-
-1. [Prerequisites](#prerequisites)
-2. [Run Docker (Databases)](#run-docker-databases)
-3. [Run APIs Locally](#run-apis-locally)
-4. [Authentication - JWT Tokens](#authentication---jwt-tokens)
-5. [Test with Postman](#test-with-postman)
-6. [Test with Swagger](#test-with-swagger)
-7. [Test with curl](#test-with-curl)
-
----
-
-## ✅ Prerequisites
-
-- [ ] Docker Desktop installed and running
-- [ ] .NET 8 SDK installed
-- [ ] Postman installed (optional)
-- [ ] Git Bash or PowerShell
-
----
-
-## 🐳 Run Docker (Databases)
-
-### 1️⃣ Start database containers
+## Start the stack
+From the repository root:
 
 ```bash
-cd C:\Users\devke\source\bla-task-management-system
-docker-compose up -d mongodb postgres
+docker compose up -d
 ```
 
-### 2️⃣ Verify containers are running
+Verify the containers:
 
 ```bash
-docker ps
+docker compose ps
 ```
 
-You should see:
-- `tasks-mongodb` (port 27017) - STATUS: Up (healthy)
-- `users-postgres` (port 5432) - STATUS: Up (healthy)
+Expected ports:
+- Web: `http://localhost:3000`
+- Tasks API: `http://localhost:5001`
+- Users API: `http://localhost:5002`
+- MongoDB: `localhost:27017`
+- PostgreSQL: `localhost:5432`
+- Seq: `http://localhost:8081`
 
-### 3️⃣ View container logs (optional)
-
+If something fails to start:
 ```bash
-# MongoDB logs
-docker logs tasks-mongodb
-
-# PostgreSQL logs
-docker logs users-postgres
+docker compose logs -f tasks-api users-api mongodb postgres
 ```
 
----
+## Authentication
+Most API endpoints require a JWT.
 
-## 🚀 Run APIs Locally
+### Demo login
+- Email: `admin@taskmanagement.com`
+- Password: `Password123!`
 
-### ✅ Tasks API (Port 5077)
-
-#### Option 1: PowerShell
-
+### Get a token
 ```powershell
-cd C:\Users\devke\source\bla-task-management-system\apps\tasks-api\src\TasksApi.WebApi
-$env:ASPNETCORE_ENVIRONMENT="Development"
-$env:ASPNETCORE_URLS="http://localhost:5001"
-dotnet run
+$response = Invoke-RestMethod -Method Post -Uri 'http://localhost:5002/api/users/login' `
+  -ContentType 'application/json' `
+  -Body '{"email":"admin@taskmanagement.com","password":"Password123!"}'
+
+$token = $response.token
+$refreshToken = $response.refreshToken
 ```
 
-#### Option 2: Visual Studio / Rider
+## Core endpoints
+### Users API
+- `POST /api/users/login`
+- `POST /api/users/register`
+- `POST /api/users/refresh`
+- `GET /api/users/me`
+- `PUT /api/users/me`
+- `POST /api/users/me/reset-password`
+- `GET /api/users`
+- `POST /api/users/admin/create`
+- `PUT /api/users/admin/{id}/role`
 
-1. Open solution `BlaTaskManagement.sln`
-2. Set `TasksApi.WebApi` as startup project
-3. Press F5 or click "Run"
+### Tasks API
+- `GET /api/tasks`
+- `GET /api/tasks/{id}`
+- `POST /api/tasks`
+- `PUT /api/tasks/{id}`
+- `DELETE /api/tasks/{id}`
 
-#### Verify it's running
+## Test with Swagger
+Swagger is available from the running API containers:
+- Tasks API: http://localhost:5001/swagger
+- Users API: http://localhost:5002/swagger
 
+Recommended flow:
+1. Open Users API Swagger.
+2. Run `POST /api/users/login` with the demo credentials.
+3. Copy the JWT token.
+4. Click **Authorize** and paste `Bearer <token>`.
+5. Test protected endpoints such as `GET /api/users/me` or `GET /api/tasks`.
+
+## Test with curl
+### Login
 ```bash
-curl http://localhost:5077/api/tasks
-```
-
-**Note:** Tasks API now requires JWT authentication - you'll get `401 Unauthorized` without a token.
-See [Authentication section](#authentication---jwt-tokens) below.
-
----
-
-### ✅ Users API (Port 5078)
-
-#### Run locally
-
-```powershell
-cd C:\Users\devke\source\bla-task-management-system\apps\users-api\src\UsersApi.WebApi
-$env:ASPNETCORE_ENVIRONMENT="Development"
-$env:ASPNETCORE_URLS="http://localhost:5002"
-dotnet run
-```
-
-#### Verify it's running
-
-```bash
-curl http://localhost:5078/api/users/login -X POST -H "Content-Type: application/json" -d "{\"email\":\"admin@taskmanagement.com\",\"password\":\"Password123!\"}"
-```
-
-Expected response:
-```json
-{
-  "userId": "00000000-0000-0000-0000-000000000001",
-  "email": "admin@taskmanagement.com",
-  "fullName": "Admin User",
-  "token": "eyJhbGciOiJIUzI1NiIs...",
-  "expiresAt": "2026-06-11T...Z"
-}
-```
-
----
-
-## 🔐 Authentication - JWT Tokens
-
-All API endpoints (except login and register) require JWT authentication.
-
-### Authentication Flow
-
-```
-1. POST /api/users/login → Get JWT token
-2. Include token in Authorization header for all subsequent requests
-3. Backend validates token and extracts userId from claims
-4. 401 Unauthorized for missing/invalid/expired tokens
-```
-
-### Get a Token
-
-```bash
-# Login with demo credentials
-curl -X POST http://localhost:5078/api/users/login \
+curl -X POST http://localhost:5002/api/users/login \
   -H "Content-Type: application/json" \
   -d '{"email":"admin@taskmanagement.com","password":"Password123!"}'
-
-# Save the token from the response
 ```
 
-### Use Token in Requests
-
+### Get current user
 ```bash
-curl http://localhost:5077/api/tasks \
-  -H "Authorization: Bearer <your-jwt-token>"
+curl http://localhost:5002/api/users/me \
+  -H "Authorization: Bearer <token>"
 ```
 
----
-
-## 📬 Test with Postman
-
-### 1️⃣ Import collection
-
-1. Open Postman
-2. Click **Import** (top left corner)
-3. Select file: `docs/POSTMAN_COLLECTION.json`
-4. Collection will be imported with pre-configured requests
-
-### 2️⃣ Environment variables (pre-configured)
-
-The collection includes these variables:
-- `userId`: `00000000-0000-0000-0000-000000000001`
-- `taskId`: (empty - updates after task creation)
-- `jwt_token`: (empty - updates after login)
-
-### 3️⃣ First: Authenticate
-
-1. Expand the **"Users API"** folder
-2. Select **"Login"**
-3. Click **Send**
-4. Copy `token` from response
-5. Set collection variable `jwt_token` with this value
-
-### 4️⃣ Then: Test protected endpoints
-
-All other requests automatically include the `jwt_token` in the Authorization header.
-
----
-
-## 📖 Test with Swagger
-
-### Tasks API Swagger
-
-```
-http://localhost:5077/swagger
-```
-
-1. Open Swagger UI
-2. Click **Authorize** button (top right)
-3. Enter your JWT token: `Bearer <your-token>`
-4. Click **Authorize**
-5. Now you can test any endpoint
-
-### Users API Swagger
-
-```
-http://localhost:5078/swagger
-```
-
-Same authorization flow as Tasks API.
-
----
-
-## 🔧 Test with curl
-
-### Step 1: Authenticate and get token
-
+### Get tasks
 ```bash
-# PowerShell
-$response = curl.exe -X POST http://localhost:5078/api/users/login `
-  -H "Content-Type: application/json" `
-  -d '{"email":"admin@taskmanagement.com","password":"Password123!"}'
-
-$token = ($response | ConvertFrom-Json).token
+curl http://localhost:5001/api/tasks \
+  -H "Authorization: Bearer <token>"
 ```
 
-### Step 2: Use token in subsequent requests
-
+### Create a task
 ```bash
-# GET all tasks (authenticated)
-curl.exe http://localhost:5077/api/tasks -H "Authorization: Bearer $token"
+curl -X POST http://localhost:5001/api/tasks \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <token>" \
+  -d '{"title":"Container test task","description":"Created against Docker stack","priority":"High","dueDate":"2026-06-15T23:59:59Z"}'
 ```
 
-### Step 3: Create a task (authenticated)
+## Test with Postman
+1. Import `docs/POSTMAN_COLLECTION.json`.
+2. Confirm the collection targets `localhost:5001` and `localhost:5002`.
+3. Run **Login (Manager)** first to populate `jwt_token` and `refresh_token`.
+4. Run the protected Tasks API and Users API requests.
 
+## Helpful Docker commands while testing
 ```bash
-curl.exe -X POST http://localhost:5077/api/tasks `
-  -H "Content-Type: application/json" `
-  -H "Authorization: Bearer $token" `
-  -d '{"title":"Test Task","description":"Test Description","priority":"Medium","dueDate":"2026-06-15T23:59:59Z"}'
+# Tail API logs while calling endpoints
+docker compose logs -f tasks-api users-api
+
+# Open the web app against the containerized APIs
+# http://localhost:3000
+
+# Stop containers but keep data
+docker compose down
+
+# Stop containers and delete persisted data
+docker compose down -v
 ```
 
-Note: `userId` is no longer required in the request body - it's extracted from the JWT token.
+`docker compose down` keeps MongoDB, PostgreSQL, and Seq data. `docker compose down -v` removes those volumes and gives you a clean reset for repeatable testing.
 
-### Step 4: Verify authentication works
-
-```bash
-# Without token (should fail with 401)
-curl.exe http://localhost:5077/api/tasks
-# Expected: 401 Unauthorized
-```
-
----
-
-## 📊 Current Implementation Status
-
-### ✅ Tasks API (Protected with JWT)
-
-| Endpoint | Method | Status | Issue |
-|----------|--------|--------|-------|
-| `/api/tasks` | GET | ✅ Implemented (Auth required) | #19 |
-| `/api/tasks/{id}` | GET | ✅ Implemented (Auth required) | #4 |
-| `/api/tasks` | POST | ✅ Implemented (Auth required) | #1 |
-| `/api/tasks/{id}` | PUT | ✅ Implemented (Auth required) | #2 |
-| `/api/tasks/{id}` | DELETE | ✅ Implemented (Auth required) | #3 |
-
-### ✅ Users API (With JWT Authentication)
-
-| Endpoint | Method | Status | Issue |
-|----------|--------|--------|-------|
-| `/api/users/register` | POST | ✅ Implemented (Public) | #5 |
-| `/api/users/login` | POST | ✅ Implemented (Public) | #6 |
-| `/api/users/me` | GET | ✅ Implemented (Auth required) | #7 |
-
-### Demo Credentials
-
-| Email | Password | User ID |
-|-------|----------|---------|
-| admin@taskmanagement.com | Password123! | 00000000-0000-0000-0000-000000000001 |
-| john.doe@example.com | Password123! | 00000000-0000-0000-0000-000000000002 |
-| jane.smith@example.com | Password123! | 00000000-0000-0000-0000-000000000003 |
-
----
-
-## 🎯 Next Steps
-
-1. ✅ Docker running (MongoDB + PostgreSQL)
-2. ✅ Tasks API running and responding
-3. ✅ Users API with authentication
-4. ✅ JWT Authentication implemented
-5. 🔲 **Start frontend development (Issues #9, #10)**
-
----
-
-## 📚 Additional Resources
-
-- [API_SECURITY_GUIDE.md](./API_SECURITY_GUIDE.md) - JWT implementation guide
-- [USER_STORIES.md](./USER_STORIES.md) - User stories with implementation guides
-- [Swagger UI - Tasks API](http://localhost:5077/swagger)
-- [Swagger UI - Users API](http://localhost:5078/swagger)
-
----
-
-**Last updated:** 2026-06-10  
-**Author:** BLA Task Management Team  
-**Project:** Technical Interview Exercise
+## Related docs
+- [Setup Guide](./SETUP.md)
+- [API Security Guide](./API_SECURITY_GUIDE.md)
+- [Postman Collection](./POSTMAN_COLLECTION.json)

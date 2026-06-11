@@ -26,8 +26,8 @@ export async function getAllUsers(): Promise<User[]> {
 
 // ==================== Tasks API ====================
 
-export async function getTasks(userId: string): Promise<Task[]> {
-  const response = await tasksApiClient.get<Task[]>(`/tasks?userId=${userId}`)
+export async function getTasks(): Promise<Task[]> {
+  const response = await tasksApiClient.get<Task[]>('/tasks')
   return response.data
 }
 

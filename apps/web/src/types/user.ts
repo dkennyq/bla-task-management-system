@@ -13,8 +13,12 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
+  userId: string
+  email: string
+  fullName: string
   token: string
-  user: User
+  refreshToken: string
+  expiresAt: string
 }
 
 export interface RegisterRequest {
@@ -25,6 +29,10 @@ export interface RegisterRequest {
 }
 
 export interface RegisterResponse {
-  user: User
-  message: string
+  userId: string
+  email: string
+  fullName: string
+  token: string
+  refreshToken: string
+  expiresAt: string
 }

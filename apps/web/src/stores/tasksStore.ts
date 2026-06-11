@@ -73,15 +73,14 @@ export const useTasksStore = defineStore('tasks', () => {
   })
 
   // Actions
-  async function fetchTasks(userId: string) {
+  async function fetchTasks() {
     loading.value = true
     error.value = null
     try {
-      const data = await getTasks(userId)
+      const data = await getTasks()
       tasks.value = data
     } catch (err: unknown) {
       error.value = (err as ApiError).message || 'Failed to fetch tasks'
-      throw err
     } finally {
       loading.value = false
     }
@@ -96,7 +95,6 @@ export const useTasksStore = defineStore('tasks', () => {
       return data
     } catch (err: unknown) {
       error.value = (err as ApiError).message || 'Failed to fetch task'
-      throw err
     } finally {
       loading.value = false
     }

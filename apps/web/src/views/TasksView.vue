@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import { onMounted, computed } from 'vue'
 import { RouterLink } from 'vue-router'
-import { useAuthStore } from '../stores/authStore'
 import { useTasksStore } from '../stores/tasksStore'
 import type { TaskStatus } from '../types/task'
 import type { SortBy } from '../stores/tasksStore'
 
-const authStore = useAuthStore()
 const tasksStore = useTasksStore()
 
 const statusFilters: (TaskStatus | 'All')[] = ['All', 'Pending', 'InProgress', 'Completed']
@@ -49,30 +47,19 @@ function formatDate(dateStr?: string): string {
   })
 }
 
-const hasActiveFilters = computed(() =>
-  tasksStore.filter !== 'All' || tasksStore.searchQuery !== ''
-)
-
 const emptyMessage = computed(() => {
   if (tasksStore.tasks.length === 0) {
-    return 'No tasks yet. Create your first task!'
+    return 'There are no records.'
   }
-  if (hasActiveFilters.value) {
-    return 'No tasks match your current filters.'
-  }
-  return 'No tasks found.'
+  return 'No tasks match your current filters.'
 })
 
 onMounted(() => {
-  if (authStore.currentUser?.id) {
-    tasksStore.fetchTasks(authStore.currentUser.id)
-  }
+  tasksStore.fetchTasks()
 })
 
 function handleRetry() {
-  if (authStore.currentUser?.id) {
-    tasksStore.fetchTasks(authStore.currentUser.id)
-  }
+  tasksStore.fetchTasks()
 }
 </script>
 

@@ -5,12 +5,13 @@ import type {
   InternalAxiosRequestConfig,
 } from "axios";
 import type { ApiError } from "../types/api";
+import { useAuthStore } from "../stores/authStore";
 
 // API Base URLs
 export const TASKS_API_URL =
-  import.meta.env.VITE_TASKS_API_URL || "http://localhost:5077/api";
+  import.meta.env.VITE_TASKS_API_URL || "https://localhost:7071/api";
 export const USERS_API_URL =
-  import.meta.env.VITE_USERS_API_URL || "http://localhost:5034/api";
+  import.meta.env.VITE_USERS_API_URL || "https://localhost:7070/api";
 
 // Create Axios instances
 export const tasksApiClient: AxiosInstance = axios.create({
@@ -51,12 +52,8 @@ const responseErrorInterceptor = (error: AxiosError) => {
 
     // Handle 401 Unauthorized
     if (error.response.status === 401) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      // Redirect to login if needed
-      if (window.location.pathname !== "/login") {
-        window.location.href = "/login";
-      }
+      const authStore = useAuthStore()
+      authStore.logout()
     }
 
     return Promise.reject(apiError);

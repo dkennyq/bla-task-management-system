@@ -21,6 +21,10 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../views/TasksView.vue'),
     meta: { requiresAuth: true }
   },
+  {
+    path: '/register',
+    redirect: '/login'
+  },
 ]
 
 const router = createRouter({
@@ -29,18 +33,17 @@ const router = createRouter({
 })
 
 // Navigation guard for authentication
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from) => {
   const authStore = useAuthStore()
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
 
   if (requiresAuth && !authStore.isAuthenticated) {
     // Redirect to login if trying to access protected route
-    next({ name: 'login', query: { redirect: to.fullPath } })
-  } else if (to.name === 'login' && authStore.isAuthenticated) {
+    return { name: 'login', query: { redirect: to.fullPath } }
+  }
+  if (to.name === 'login' && authStore.isAuthenticated) {
     // Redirect to tasks if already logged in and trying to access login
-    next({ name: 'tasks' })
-  } else {
-    next()
+    return { name: 'tasks' }
   }
 })
 

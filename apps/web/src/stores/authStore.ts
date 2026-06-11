@@ -21,10 +21,17 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
     try {
       const response = await loginApi(credentials)
-      user.value = response.user
+      const loggedInUser: User = {
+        id: response.userId,
+        username: response.email,
+        email: response.email,
+        fullName: response.fullName,
+        createdAt: '',
+      }
+      user.value = loggedInUser
       token.value = response.token
       localStorage.setItem('token', response.token)
-      localStorage.setItem('user', JSON.stringify(response.user))
+      localStorage.setItem('user', JSON.stringify(loggedInUser))
       return response
     } catch (err: unknown) {
       const apiErr = err as ApiError

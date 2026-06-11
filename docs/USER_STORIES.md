@@ -1388,6 +1388,468 @@ No usar EF, Dapper o Mediator. Genera un plan inicial.
 
 ---
 
+## 🔒 US-18: Role-Based Access Control (RBAC) - Manager & Operator Roles
+
+**User Story:**  
+As a system administrator, I want to assign roles to users (Manager and Operator), so that Managers can view all tasks in the system while Operators only see their own tasks.
+
+**GitHub Issue**: [#34](https://github.com/dkennyq/bla-task-management-system/issues/34)
+
+### Acceptance Criteria
+1. ✅ Database has `role` column in `users` table with CHECK constraint
+2. ✅ New users default to "Operator" role when role not specified
+3. ✅ JWT token includes "role" claim
+4. ✅ Manager users can call GET /api/tasks and see ALL tasks from all users
+5. ✅ Operator users can call GET /api/tasks and see ONLY their own tasks
+6. ✅ Registration endpoint accepts optional `role` parameter
+7. ✅ GET /api/users/me returns user's role
+8. ✅ Invalid role values are rejected with 400 Bad Request
+
+### Technical Details
+
+#### API: PostgreSQL Database Migration
+**Migration File**: `infrastructure/database/postgres/04-migration-add-user-roles.sql`
+
+```sql
+ALTER TABLE users 
+ADD COLUMN role VARCHAR(50) NOT NULL DEFAULT 'Operator';
+
+ALTER TABLE users 
+ADD CONSTRAINT chk_user_role 
+CHECK (role IN ('Manager', 'Operator'));
+
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+```
+
+#### API: Users API - Update Response
+**Endpoint**: `POST /api/users/register`
+
+**Request (Updated):**
+```json
+{
+  "username": "string",
+  "email": "string",
+  "password": "string",
+  "fullName": "string",
+  "role": "Manager" | "Operator"  // OPTIONAL, defaults to "Operator"
+}
+```
+
+**Response (Updated):**
+```json
+{
+  "id": "guid",
+  "username": "string",
+  "email": "string",
+  "fullName": "string",
+  "role": "Operator"  // NEW
+}
+```
+
+#### API: Tasks API - Query Logic Update
+**Endpoint**: `GET /api/tasks`
+
+**Behavior:**
+- Extract `userId` and `role` from JWT token
+- **If role = "Manager"**: Return ALL tasks in the system (no userId filter)
+- **If role = "Operator"**: Return only tasks where `userId` matches
+
+**Response (unchanged):**
+```json
+[
+  {
+    "id": "guid",
+    "title": "string",
+    "description": "string",
+    "status": "Pending" | "InProgress" | "Completed",
+    "priority": "Low" | "Medium" | "High",
+    "dueDate": "ISO 8601 date",
+    "userId": "guid",  // Shows which user created the task
+    "createdAt": "ISO 8601 datetime",
+    "updatedAt": "ISO 8601 datetime"
+  }
+]
+```
+
+### Implementation Guide (TDD)
+
+#### Phase 1: Database & Domain Layer (Users API)
+1. **Database Migration** (Infrastructure)
+   - Create `infrastructure/database/postgres/04-migration-add-user-roles.sql`
+   - Add `role` column with DEFAULT 'Operator'
+   - Add CHECK constraint for valid roles
+   - Update seed data: admin user = 'Manager'
+
+2. **Domain Layer** (Users API)
+   - Create `UsersApi.Domain/Enums/UserRole.cs` enum
+   - Update `UserEntity.cs`: Add `UserRole Role` property
+   - Write tests FIRST:
+     - `Constructor_ShouldSetRoleToOperator_WhenNotProvided()`
+     - `Constructor_ShouldSetRoleToManager_WhenProvided()`
+   - Run tests (RED)
+   - Update constructor to accept `UserRole role` parameter
+   - Run tests (GREEN)
+
+#### Phase 2: Application Layer (Users API)
+1. **Commands**
+   - Update `RegisterUserCommand`: Add `UserRole Role` property
+   - Update `RegisterUserCommandHandler`: Pass role to entity
+   - Write tests FIRST:
+     - `Handle_ShouldRegisterOperatorUser_WhenRoleNotProvided()`
+     - `Handle_ShouldRegisterManagerUser_WhenRoleIsManager()`
+
+2. **Queries**
+   - Update `UserDto`: Add `string Role` property
+   - Update `GetUserByIdQueryHandler`: Map `user.Role` to DTO
+
+#### Phase 3: Infrastructure Layer (Users API)
+1. **Repository**
+   - Update `UserRepository.MapReader()`: Read `role` from DB, convert to enum
+   - Update `UserRepository.AddAsync()`: Insert `role` column
+   - Write tests FIRST:
+     - `AddAsync_ShouldPersistUserWithRole()`
+     - `GetByIdAsync_ShouldReturnUserWithCorrectRole()`
+
+2. **JWT Service**
+   - Update `JwtService.GenerateToken()`: Add role claim
+   ```csharp
+   new Claim("role", user.Role.ToString())
+   ```
+   - Write test: `GenerateToken_ShouldIncludeRoleClaim()`
+
+#### Phase 4: WebApi Layer (Users API)
+1. **DTOs**
+   - Update `RegisterRequest`: Add `string? Role` property (optional)
+   - Update `UserResponse`: Add `string Role` property
+
+2. **Controller**
+   - Update `UsersController.Register()`:
+     - Validate role value (must be "Manager" or "Operator")
+     - Default to "Operator" if not provided
+   - Update `UsersController.GetMe()`: Include role in response
+   - Write tests:
+     - `Register_ShouldReturnBadRequest_WhenInvalidRole()`
+     - `Register_ShouldCreateOperator_WhenRoleNotProvided()`
+
+#### Phase 5: Tasks API - Query Logic
+1. **Application Layer**
+   - Update `GetAllTasksQuery`: Add `string UserRole` property
+   - Update `GetAllTasksQueryHandler.Handle()`:
+     ```csharp
+     if (query.UserRole == "Manager")
+         return await _repository.GetAllAsync(cancellationToken);
+     else
+         return await _repository.GetAllByUserIdAsync(query.UserId, cancellationToken);
+     ```
+   - Write tests:
+     - `Handle_ShouldReturnAllTasks_WhenUserIsManager()`
+     - `Handle_ShouldReturnOnlyUserTasks_WhenUserIsOperator()`
+
+2. **Infrastructure Layer**
+   - Add `ITaskRepository.GetAllAsync()` method
+   - Implement in `MongoTaskRepository`:
+     ```csharp
+     public async Task<IEnumerable<TaskEntity>> GetAllAsync(CancellationToken cancellationToken)
+     {
+         return await _collection.Find(_ => true).ToListAsync(cancellationToken);
+     }
+     ```
+
+3. **WebApi Layer**
+   - Update `TasksController.GetAllTasks()`:
+     - Extract role from JWT: `GetUserRole()` helper method
+     - Pass role to query
+   - Write tests: `GetAllTasks_ShouldCallHandlerWithManagerRole_WhenUserIsManager()`
+
+### Files to Create/Modify
+
+**Create New (2):**
+1. `infrastructure/database/postgres/04-migration-add-user-roles.sql`
+2. `apps/users-api/src/UsersApi.Domain/Enums/UserRole.cs`
+
+**Modify Existing (24):**
+- Users API: 16 files (Domain, Application, Infrastructure, WebApi layers + tests)
+- Tasks API: 8 files (Application, Infrastructure, WebApi layers + tests)
+
+### Dependencies
+- ✅ Users API with registration (Issue #5)
+- ✅ JWT authentication (Issue #19)
+- ✅ Tasks API baseline
+- 🔲 **Blocks**: Issue #35 (Real-Time Updates)
+
+---
+
+## 🔄 US-19: Real-Time Task Updates with SignalR
+
+**User Story:**  
+As a user, I want to see task changes in real-time when other users create, update, or delete tasks, so that I can collaborate effectively with my team without manually refreshing the page.
+
+**GitHub Issue**: [#35](https://github.com/dkennyq/bla-task-management-system/issues/35)
+
+### Acceptance Criteria
+1. ✅ SignalR Hub is accessible at `/taskHub` endpoint
+2. ✅ Frontend connects to SignalR on login
+3. ✅ Frontend disconnects from SignalR on logout
+4. ✅ TaskCreated event broadcasts when task is created via API
+5. ✅ TaskUpdated event broadcasts when task is updated via API
+6. ✅ TaskDeleted event broadcasts when task is deleted via API
+7. ✅ Frontend updates task list reactively without page refresh
+8. ✅ No duplicate tasks appear in UI
+9. ✅ Connection reconnects automatically after interruption
+
+### Technical Details
+
+#### Backend: SignalR Hub Setup
+
+**Hub Class**: `apps/tasks-api/src/TasksApi.WebApi/Hubs/TaskHub.cs`
+```csharp
+using Microsoft.AspNetCore.SignalR;
+
+namespace TasksApi.WebApi.Hubs;
+
+public class TaskHub : Hub
+{
+    public async Task JoinUserRoom(string userId)
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, $"user_{userId}");
+    }
+}
+```
+
+**Program.cs Registration:**
+```csharp
+// Add services
+builder.Services.AddSignalR();
+
+// Map hub endpoint
+app.MapHub<TaskHub>("/taskHub");
+```
+
+**CORS Update:**
+```csharp
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials(); // REQUIRED for SignalR
+    });
+});
+```
+
+#### Backend: Broadcast Events from TasksController
+
+**Inject IHubContext:**
+```csharp
+private readonly IHubContext<TaskHub> _hubContext;
+
+public TasksController(IHubContext<TaskHub> hubContext, /* other deps */)
+{
+    _hubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
+}
+```
+
+**Create Task:**
+```csharp
+[HttpPost]
+public async Task<IActionResult> CreateTask([FromBody] CreateTaskRequest request)
+{
+    // ... existing logic ...
+    var task = await _commandHandler.HandleAsync(command, cancellationToken);
+    
+    // Broadcast to all connected clients
+    await _hubContext.Clients.All.SendAsync("TaskCreated", task, cancellationToken);
+    
+    return CreatedAtAction(nameof(GetTaskById), new { id = task.Id }, task);
+}
+```
+
+**Update Task:**
+```csharp
+await _hubContext.Clients.All.SendAsync("TaskUpdated", updatedTask, cancellationToken);
+```
+
+**Delete Task:**
+```csharp
+await _hubContext.Clients.All.SendAsync("TaskDeleted", new { id, userId = GetUserId() }, cancellationToken);
+```
+
+#### Frontend: SignalR Service
+
+**Install Package:**
+```bash
+npm install @microsoft/signalr
+```
+
+**Service File**: `apps/frontend/src/services/signalrService.js`
+```javascript
+import * as signalR from '@microsoft/signalr';
+import { useTasksStore } from '@/stores/tasksStore';
+
+let connection = null;
+
+export async function connectSignalR() {
+    connection = new signalR.HubConnectionBuilder()
+        .withUrl('http://localhost:5077/taskHub')
+        .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
+        .build();
+
+    const tasksStore = useTasksStore();
+
+    // Event handlers
+    connection.on('TaskCreated', (task) => {
+        tasksStore.addTaskFromSignalR(task);
+    });
+
+    connection.on('TaskUpdated', (task) => {
+        tasksStore.updateTaskFromSignalR(task);
+    });
+
+    connection.on('TaskDeleted', ({ id }) => {
+        tasksStore.removeTaskFromSignalR(id);
+    });
+
+    await connection.start();
+    console.log('✅ SignalR connected');
+}
+
+export async function disconnectSignalR() {
+    if (connection) {
+        await connection.stop();
+    }
+}
+```
+
+#### Frontend: Pinia Store Updates
+
+**File**: `apps/frontend/src/stores/tasksStore.js`
+```javascript
+export const useTasksStore = defineStore('tasks', {
+    state: () => ({
+        tasks: []
+    }),
+    
+    actions: {
+        addTaskFromSignalR(task) {
+            const exists = this.tasks.find(t => t.id === task.id);
+            if (!exists) {
+                this.tasks.unshift(task);
+            }
+        },
+
+        updateTaskFromSignalR(task) {
+            const index = this.tasks.findIndex(t => t.id === task.id);
+            if (index !== -1) {
+                this.tasks[index] = task;
+            } else {
+                this.tasks.unshift(task);
+            }
+        },
+
+        removeTaskFromSignalR(taskId) {
+            const index = this.tasks.findIndex(t => t.id === taskId);
+            if (index !== -1) {
+                this.tasks.splice(index, 1);
+            }
+        }
+    }
+});
+```
+
+#### Frontend: App.vue Lifecycle
+
+**Connect on mount:**
+```vue
+<script setup>
+import { onMounted, onUnmounted } from 'vue';
+import { connectSignalR, disconnectSignalR } from '@/services/signalrService';
+import { useAuthStore } from '@/stores/authStore';
+
+const authStore = useAuthStore();
+
+onMounted(async () => {
+    if (authStore.isAuthenticated) {
+        await connectSignalR();
+    }
+});
+
+onUnmounted(async () => {
+    await disconnectSignalR();
+});
+</script>
+```
+
+### Implementation Guide (TDD)
+
+#### Phase 1: Backend Setup
+1. **Create TaskHub** (WebApi Layer)
+   - Create `TasksApi.WebApi/Hubs/TaskHub.cs`
+   - Register in `Program.cs`
+   - Update CORS to allow credentials
+
+2. **Inject IHubContext into TasksController**
+   - Add constructor parameter
+   - Write mock tests:
+     - `CreateTask_ShouldBroadcastTaskCreatedEvent_WhenSuccessful()`
+     - `UpdateTask_ShouldBroadcastTaskUpdatedEvent_WhenSuccessful()`
+     - `DeleteTask_ShouldBroadcastTaskDeletedEvent_WhenSuccessful()`
+   - Run tests (RED)
+   - Add broadcast calls after successful operations
+   - Run tests (GREEN)
+
+#### Phase 2: Frontend Setup
+1. **Install SignalR Client**
+   - Run `npm install @microsoft/signalr`
+
+2. **Create SignalR Service**
+   - Create `src/services/signalrService.js`
+   - Implement `connectSignalR()` and `disconnectSignalR()`
+   - Add event handlers for TaskCreated, TaskUpdated, TaskDeleted
+
+3. **Update Pinia Store**
+   - Add `addTaskFromSignalR()` action (avoid duplicates)
+   - Add `updateTaskFromSignalR()` action
+   - Add `removeTaskFromSignalR()` action
+
+4. **Connect on Login/Mount**
+   - Update `App.vue`: Connect on mount if authenticated
+   - Update `LoginView.vue`: Connect after successful login
+   - Update `authStore.js`: Disconnect on logout
+
+#### Phase 3: Testing
+1. **Backend Tests**
+   - Mock `IHubContext<TaskHub>`
+   - Verify `SendAsync()` called with correct event name and payload
+   - Run `dotnet test`
+
+2. **Frontend Manual Tests**
+   - Open two browser windows (User A and User B)
+   - User A creates task → User B sees it appear instantly
+   - User B updates task → User A sees update instantly
+   - User A deletes task → User B sees it disappear instantly
+   - Test reconnection: Stop API → Verify "Reconnecting..." → Restart API → Verify reconnects
+
+### Files to Create/Modify
+
+**Create New (3):**
+1. `apps/tasks-api/src/TasksApi.WebApi/Hubs/TaskHub.cs`
+2. `apps/frontend/src/services/signalrService.js`
+3. `apps/frontend/src/components/SignalRStatus.vue` (optional indicator)
+
+**Modify Existing (8):**
+- Backend: 3 files (`Program.cs`, `TasksController.cs`, `TasksControllerTests.cs`)
+- Frontend: 5 files (`tasksStore.js`, `App.vue`, `LoginView.vue`, `authStore.js`, `package.json`)
+
+### Dependencies
+- ✅ Tasks API with CRUD (Issue #2, #4, #3)
+- ✅ Frontend task list (Issue #10)
+- ✅ Authentication (Issue #19)
+- 🔲 **Recommended**: Issue #34 (RBAC - makes testing more interesting)
+
+---
+
 **Document Version**: 1.0  
-**Last Updated**: 2026-06-09  
+**Last Updated**: 2026-06-10  
 **Status**: Living Document (will be updated as features are completed)

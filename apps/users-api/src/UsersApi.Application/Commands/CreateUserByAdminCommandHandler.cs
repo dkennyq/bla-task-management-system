@@ -6,19 +6,22 @@ using UsersApi.Domain.Interfaces;
 
 namespace UsersApi.Application.Commands;
 
-public class RegisterUserCommandHandler : IRegisterUserCommandHandler
+public class CreateUserByAdminCommandHandler : ICreateUserByAdminCommandHandler
 {
     private readonly IUserRepository _userRepository;
     private const int BcryptWorkFactor = 12;
 
-    public RegisterUserCommandHandler(IUserRepository userRepository)
+    public CreateUserByAdminCommandHandler(IUserRepository userRepository)
     {
         _userRepository = userRepository;
     }
 
-    public async Task<UserDto> Handle(RegisterUserCommand command, CancellationToken cancellationToken = default)
+    public async Task<UserDto> Handle(CreateUserByAdminCommand command, CancellationToken cancellationToken = default)
     {
         ValidatePasswordComplexity(command.Password);
+
+        if (!Enum.TryParse<UserRole>(command.Role, true, out var role) || !Enum.IsDefined(typeof(UserRole), role))
+            throw new ArgumentException("Role must be either 'Manager' or 'Operator'", nameof(command.Role));
 
         if (await _userRepository.ExistsByUsernameAsync(command.Username, cancellationToken))
             throw new ConflictException($"Username '{command.Username}' is already taken");
@@ -27,7 +30,7 @@ public class RegisterUserCommandHandler : IRegisterUserCommandHandler
             throw new ConflictException($"Email '{command.Email}' is already registered");
 
         var passwordHash = BCrypt.Net.BCrypt.HashPassword(command.Password, BcryptWorkFactor);
-        var user = new UserEntity(Guid.NewGuid(), command.Username, command.FullName, command.Email, passwordHash, UserRole.Operator);
+        var user = new UserEntity(Guid.NewGuid(), command.Username, command.FullName, command.Email, passwordHash, role);
 
         await _userRepository.AddAsync(user, cancellationToken);
 

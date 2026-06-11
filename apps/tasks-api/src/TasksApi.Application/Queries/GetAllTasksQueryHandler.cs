@@ -17,6 +17,9 @@ public class GetAllTasksQueryHandler
         if (query.UserId == Guid.Empty)
             throw new ArgumentException("UserId cannot be empty", nameof(query.UserId));
 
+        if (query.UserRole == "Manager")
+            return await _repository.GetAllAsync(cancellationToken);
+
         return await _repository.GetAllByUserIdAsync(query.UserId, cancellationToken);
     }
 }

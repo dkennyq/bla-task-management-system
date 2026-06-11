@@ -25,6 +25,7 @@ public class GetCurrentUserQueryHandler : IGetCurrentUserQueryHandler
             Username = user.Username,
             FullName = user.FullName,
             Email = user.Email,
+            Role = user.Role.ToString(),
             CreatedAt = user.CreatedAt
         };
     }

@@ -13,4 +13,5 @@ public interface IUserRepository
     Task UpdateAsync(UserEntity user, CancellationToken cancellationToken = default);
     Task<List<UserEntity>> GetAllAsync(int page, int pageSize, CancellationToken cancellationToken = default);
     Task<int> GetCountAsync(CancellationToken cancellationToken = default);
+    Task<int> GetManagerCountAsync(CancellationToken cancellationToken = default);
 }

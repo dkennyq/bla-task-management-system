@@ -1,66 +1,66 @@
-# 🎯 Configuración de Entorno - Quick Start
+# 🎯 Environment Configuration - Quick Start
 
-## Archivos Disponibles
+## Available Files
 
-### ✅ `.env` - Configuración por Defecto (Docker)
+### ✅ `.env` - Default Configuration (Docker)
 ```env
 VITE_TASKS_API_URL=http://localhost:5001
 VITE_USERS_API_URL=http://localhost:5002
 ```
-**Usar cuando:** Ejecutas todo en Docker
+**Use when:** Running everything in Docker
 
-### ✅ `.env.development` - Desarrollo Local
+### ✅ `.env.development` - Local Development
 ```env
 VITE_TASKS_API_URL=http://localhost:5077
 VITE_USERS_API_URL=http://localhost:5034
 ```
-**Usar cuando:** Ejecutas APIs desde Visual Studio/VS Code
+**Use when:** Running APIs from Visual Studio/VS Code
 
 ### ✅ `.env.test` - Docker Testing
 ```env
 VITE_TASKS_API_URL=http://localhost:5001
 VITE_USERS_API_URL=http://localhost:5002
 ```
-**Usar cuando:** Ejecutas tests con Docker
+**Use when:** Running tests with Docker
 
-## 🚀 Uso Rápido
+## 🚀 Quick Usage
 
-### Opción 1: Todo en Docker (Recomendado)
+### Option 1: Everything in Docker (Recommended)
 ```bash
-# El archivo .env por defecto ya está configurado
+# The default .env file is already configured
 npm run dev
 ```
 
-### Opción 2: Desarrollo Local (APIs en Visual Studio)
+### Option 2: Local Development (APIs in Visual Studio)
 ```bash
-# Usa .env.development automáticamente
+# Uses .env.development automatically
 npm run dev
 ```
 
-### Opción 3: Cambiar de entorno manualmente
+### Option 3: Manually change environment
 ```bash
-# Forzar modo test
+# Force test mode
 npm run dev -- --mode test
 
-# Forzar modo development
+# Force development mode
 npm run dev -- --mode development
 ```
 
-## 📊 Tabla de Puertos
+## 📊 Ports Table
 
-| Entorno | Tasks API | Users API |
-|---------|-----------|-----------|
+| Environment | Tasks API | Users API |
+|-------------|-----------|-----------|
 | **Docker** | 5001 | 5002 |
 | **Local (VS)** | 5077 | 5034 |
 
-## ✅ Verificación
+## ✅ Verification
 
 ```bash
-# Ver que archivo .env se está usando
+# See which .env file is being used
 cat .env
 
-# Probar la app
+# Test the app
 npm run dev
 ```
 
-Documentación completa: Ver `env-configuration-guide.md` en la carpeta de sesión.
+Complete documentation: See `env-configuration-guide.md` in the session folder.

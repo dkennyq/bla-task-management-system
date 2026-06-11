@@ -726,14 +726,133 @@ apps/users-api/tests/UsersApi.WebApi.Tests/Controllers/UsersControllerTests.cs
 **So that I** can create an account
 
 **Acceptance Criteria:**
-- Responsive design
+- Responsive design (mobile, tablet, desktop)
 - Form fields: username, email, password, confirm password, full name
-- Real-time validation feedback
-- Password strength indicator
-- Terms and conditions checkbox
-- Success message and auto-redirect to login
+- Real-time client-side validation
+  - Username: 3-50 characters, alphanumeric + underscore
+  - Email: valid format
+  - Password: 8+ chars, uppercase, lowercase, number, special char
+  - Confirm password: matches password
+  - Full name: 2-100 characters
+- Password strength indicator (weak/medium/strong)
+- Terms and conditions checkbox (required)
+- "Already have an account? Login" link
+- Client-side validation with error messages
+- Loading state during registration
+- Success message and auto-redirect to login page (2 seconds)
+- Error handling: 400 Bad Request, 409 Conflict (username/email exists)
 
-**Status**: 🔲 **PENDING**
+**Technical Details:**
+- Component: `apps/web/src/views/RegisterView.vue`
+- Route: `/register` (public, unauthenticated)
+- API: `POST /api/users/register` (Users API - port 5078)
+- Request body:
+  ```json
+  {
+    "username": "johndoe",
+    "email": "john.doe@example.com",
+    "password": "SecurePass123!",
+    "fullName": "John Doe"
+  }
+  ```
+- Response (201 Created):
+  ```json
+  {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "username": "johndoe",
+    "email": "john.doe@example.com",
+    "fullName": "John Doe",
+    "createdAt": "2026-06-10T12:00:00Z"
+  }
+  ```
+- Response (409 Conflict):
+  ```json
+  {
+    "error": "Username already exists"
+  }
+  ```
+
+**Implementation Guide (TDD):**
+
+1. **Setup Component Structure**
+   - Create `apps/web/src/views/RegisterView.vue` with Composition API
+   - Create `apps/web/src/components/auth/RegisterForm.vue` (optional, for reusability)
+   - Use Pinia store: `useAuthStore()` for registration logic
+
+2. **Form Validation (Composable)**
+   - Create `apps/web/src/composables/useRegisterForm.ts`
+   - Implement validation rules with VeeValidate or custom logic
+   - Password strength calculation function
+   - Form state management (reactive form data, errors, loading)
+
+3. **API Integration**
+   - Use `apps/web/src/services/api.js` (axios instance)
+   - Create `registerUser(userData)` function
+   - Handle 201 Created (success)
+   - Handle 400 Bad Request (validation errors)
+   - Handle 409 Conflict (duplicate username/email)
+
+4. **UI Components**
+   - Text inputs with validation feedback (red border, error message)
+   - Password input with toggle visibility button
+   - Password strength indicator (progress bar with colors)
+   - Checkbox for terms and conditions
+   - Submit button with loading spinner
+   - Success notification (toast or alert)
+   - Link to login page
+
+5. **Routing**
+   - Update `apps/web/src/router/index.js`
+   - Add `/register` route (public, no auth required)
+   - Redirect to `/login` after successful registration
+
+6. **Test Strategy**
+   - **Unit Tests** (Vitest):
+     - Test form validation rules
+     - Test password strength calculation
+     - Test error handling
+     - Mock API calls
+   - **Component Tests**:
+     - Test form submission
+     - Test validation feedback
+     - Test success redirect
+     - Test error messages display
+
+**Files to Create:**
+```
+apps/web/src/views/RegisterView.vue
+apps/web/src/composables/useRegisterForm.ts (optional)
+apps/web/src/components/auth/RegisterForm.vue (optional)
+apps/web/tests/views/RegisterView.spec.js
+apps/web/tests/composables/useRegisterForm.spec.js
+```
+
+**Files to Modify:**
+```
+apps/web/src/router/index.js (add /register route)
+apps/web/src/services/api.js (add registerUser function)
+apps/web/src/stores/auth.js (add register action)
+```
+
+**Dependencies:**
+- ✅ Users API - POST /api/users/register (US-07 - backend implemented)
+- 🔲 Vue.js 3 project setup
+- 🔲 Vue Router configured
+- 🔲 Pinia store for auth
+- 🔲 Axios configured
+- 🔲 TailwindCSS for styling
+- 🔲 Vitest for testing
+
+**UI/UX Considerations:**
+- Auto-focus on username field when page loads
+- Tab order: username → email → password → confirm password → full name → checkbox → submit
+- Enter key submits form (if valid)
+- Show password strength indicator as user types
+- Clear error messages on field change
+- Disable submit button during loading
+- Show success message before redirect
+
+**Status**: 🔲 **PENDING** (blocked by Issue #19 - API Security)
 
 ---
 

@@ -4,6 +4,7 @@ namespace TasksApi.Application.Interfaces;
 
 public interface ITaskRepository
 {
+    Task<IEnumerable<TaskEntity>> GetAllAsync(CancellationToken cancellationToken = default);
     Task<IEnumerable<TaskEntity>> GetAllByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<TaskEntity?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<TaskEntity> CreateAsync(TaskEntity task, CancellationToken cancellationToken = default);

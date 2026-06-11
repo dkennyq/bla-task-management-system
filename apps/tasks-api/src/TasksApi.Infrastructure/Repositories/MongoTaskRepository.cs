@@ -21,6 +21,12 @@ public class MongoTaskRepository : ITaskRepository
         _collection.Indexes.CreateOneAsync(indexModel).GetAwaiter().GetResult();
     }
 
+    public async Task<IEnumerable<TaskEntity>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        var documents = await _collection.Find(_ => true).ToListAsync(cancellationToken);
+        return documents.Select(d => d.ToEntity());
+    }
+
     public async Task<IEnumerable<TaskEntity>> GetAllByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var filter = Builders<TaskDocument>.Filter.Eq(t => t.UserId, userId);

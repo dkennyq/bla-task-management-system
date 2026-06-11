@@ -1,6 +1,9 @@
 import { tasksApiClient, usersApiClient } from './apiConfig'
 import type { Task, CreateTaskDto, UpdateTaskDto } from '../types/task'
-import type { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, User } from '../types/user'
+import type {
+  LoginRequest, LoginResponse, RegisterRequest, RegisterResponse, User,
+  UserListItem, CreateUserByAdminRequest, UpdateUserRoleRequest,
+} from '../types/user'
 
 // ==================== Auth API ====================
 
@@ -19,9 +22,20 @@ export async function getCurrentUser(): Promise<User> {
   return response.data
 }
 
-export async function getAllUsers(): Promise<User[]> {
-  const response = await usersApiClient.get<User[]>('/users')
+// ==================== Admin API ====================
+
+export async function getAllUsers(): Promise<UserListItem[]> {
+  const response = await usersApiClient.get<{ items: UserListItem[] }>('/users')
+  return response.data.items ?? []
+}
+
+export async function createUserByAdmin(data: CreateUserByAdminRequest): Promise<User> {
+  const response = await usersApiClient.post<User>('/users/admin/create', data)
   return response.data
+}
+
+export async function updateUserRole(id: string, data: UpdateUserRoleRequest): Promise<void> {
+  await usersApiClient.put(`/users/admin/${id}/role`, data)
 }
 
 // ==================== Tasks API ====================

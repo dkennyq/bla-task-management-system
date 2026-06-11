@@ -92,6 +92,7 @@ public class AuthService : IAuthService
             UserId = user.Id,
             Email = user.Email,
             FullName = user.FullName,
+            Role = user.Role.ToString(),
             Token = token,
             RefreshToken = refreshTokenValue,
             ExpiresAt = expiresAt

@@ -42,13 +42,19 @@ public class TasksController : ControllerBase
         return userId;
     }
 
+    private string GetUserRole()
+    {
+        return User.FindFirst(ClaimTypes.Role)?.Value ?? "Operator";
+    }
+
     [HttpGet]
     public async Task<ActionResult<IEnumerable<TaskEntity>>> GetAllTasks()
     {
         try
         {
             var userId = GetUserId();
-            var query = new GetAllTasksQuery(userId);
+            var role = GetUserRole();
+            var query = new GetAllTasksQuery(userId, role);
             var tasks = await _queryHandler.Handle(query, CancellationToken.None);
             return Ok(tasks);
         }

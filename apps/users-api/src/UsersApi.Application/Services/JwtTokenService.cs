@@ -19,7 +19,7 @@ public class JwtTokenService : IJwtTokenService
     public (string Token, DateTime ExpiresAt) GenerateToken(UserEntity user)
     {
         var expiresAt = DateTime.UtcNow.AddHours(_settings.ExpirationHours);
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.SecretKey));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.GetEffectiveSecretKey()));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]
@@ -27,8 +27,9 @@ public class JwtTokenService : IJwtTokenService
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Email, user.Email),
             new Claim(ClaimTypes.Name, user.FullName),
-            new Claim(JwtRegisteredClaimNames.Iat, 
-                new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString(), 
+            new Claim(ClaimTypes.Role, user.Role.ToString()),
+            new Claim(JwtRegisteredClaimNames.Iat,
+                new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString(),
                 ClaimValueTypes.Integer64),
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
         };
@@ -48,7 +49,12 @@ public class JwtTokenService : IJwtTokenService
 public class JwtSettings
 {
     public string SecretKey { get; set; } = string.Empty;
+
+    public string? Secret { get; set; }
+
     public string Issuer { get; set; } = "TaskManagementAPI";
     public string Audience { get; set; } = "TaskManagementWeb";
     public int ExpirationHours { get; set; } = 24;
+
+    public string GetEffectiveSecretKey() => Secret ?? SecretKey;
 }

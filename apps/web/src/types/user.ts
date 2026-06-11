@@ -29,10 +29,9 @@ export interface RegisterRequest {
 }
 
 export interface RegisterResponse {
-  userId: string
+  id: string
+  username: string
   email: string
   fullName: string
-  token: string
-  refreshToken: string
-  expiresAt: string
+  createdAt: string
 }

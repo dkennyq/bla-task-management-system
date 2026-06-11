@@ -23,7 +23,9 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/register',
-    redirect: '/login'
+    name: 'register',
+    component: () => import('../views/RegisterView.vue'),
+    meta: { requiresAuth: false }
   },
 ]
 

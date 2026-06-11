@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { onMounted, computed } from 'vue'
+import { onMounted, computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useTasksStore } from '../stores/tasksStore'
+import TaskFormModal from '../components/tasks/TaskFormModal.vue'
 import type { TaskStatus } from '../types/task'
 import type { SortBy } from '../stores/tasksStore'
 
 const tasksStore = useTasksStore()
+
+const showCreateModal = ref(false)
 
 const statusFilters: (TaskStatus | 'All')[] = ['All', 'Pending', 'InProgress', 'Completed']
 const sortOptions: { value: SortBy; label: string }[] = [
@@ -61,6 +64,15 @@ onMounted(() => {
 function handleRetry() {
   tasksStore.fetchTasks()
 }
+
+function handleCreateSave() {
+  showCreateModal.value = false
+  tasksStore.fetchTasks()
+}
+
+function handleCreateClose() {
+  showCreateModal.value = false
+}
 </script>
 
 <template>
@@ -69,15 +81,15 @@ function handleRetry() {
       <!-- Header -->
       <div class="flex items-center justify-between mb-6">
         <h2 class="text-3xl font-bold text-gray-900">Tasks</h2>
-        <RouterLink
-          to="/tasks/new"
+        <button
+          @click="showCreateModal = true"
           class="btn-primary inline-flex items-center gap-2"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
           Create New Task
-        </RouterLink>
+        </button>
       </div>
 
       <!-- Filters Bar -->
@@ -205,13 +217,13 @@ function handleRetry() {
           />
         </svg>
         <p class="text-gray-500 text-lg">{{ emptyMessage }}</p>
-        <RouterLink
+        <button
           v-if="tasksStore.tasks.length === 0"
-          to="/tasks/new"
+          @click="showCreateModal = true"
           class="btn-primary inline-flex items-center gap-2 mt-4"
         >
           Create Task
-        </RouterLink>
+        </button>
       </div>
 
       <!-- Task Cards -->
@@ -243,16 +255,22 @@ function handleRetry() {
           <h3 class="text-lg font-semibold text-gray-900 mb-1 truncate">{{ task.title }}</h3>
           <p class="text-sm text-gray-600 mb-3 line-clamp-2">{{ task.description }}</p>
           <div class="flex items-center justify-between text-xs text-gray-500">
-            <span v-if="task.dueDate" class="flex items-center gap-1">
+            <span v-if="task.dueDate" class="flex items-center gap-1" title="Due date">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
               {{ formatDate(task.dueDate) }}
             </span>
-            <span>{{ formatDate(task.createdAt) }}</span>
+            <span title="Created">{{ formatDate(task.createdAt) }}</span>
           </div>
         </RouterLink>
       </div>
+      <TaskFormModal
+        :is-open="showCreateModal"
+        mode="create"
+        @save="handleCreateSave"
+        @close="handleCreateClose"
+      />
     </div>
   </div>
 </template>

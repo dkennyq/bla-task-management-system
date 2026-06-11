@@ -881,32 +881,312 @@ apps/web/src/stores/auth.js (add register action)
 **So that I** can add or modify task information
 
 **Acceptance Criteria:**
-- Modal or separate page for form
-- Form fields: title, description (textarea), priority (dropdown), due date (date picker)
-- Client-side validation
+- Modal dialog for both create and edit modes
+- Form fields:
+  - Title (text input, required, max 200 chars)
+  - Description (textarea, optional, max 1000 chars)
+  - Priority (dropdown: Low/Medium/High, required)
+  - Due Date (date picker, optional)
+  - Status (dropdown: Pending/InProgress/Completed, only in edit mode)
+- Client-side validation with error messages
 - Cancel and Save buttons
-- Loading state during save
-- Success/error notifications
-- Close form after successful save
+- Loading state during save (disabled inputs, spinner on button)
+- Success notification (toast)
+- Close modal after successful save
+- Error handling: 400 Bad Request, 404 Not Found (edit mode)
+- Pre-fill form with existing data in edit mode
+- Clear form when switching from edit to create mode
 
-**Status**: 🔲 **PENDING**
+**Technical Details:**
+
+**CREATE MODE:**
+- Component: `apps/web/src/components/tasks/TaskFormModal.vue`
+- Trigger: Click "Create New Task" button in Task List View
+- API: `POST /api/tasks` (Tasks API - port 5077)
+- Request body:
+  ```json
+  {
+    "title": "Complete project documentation",
+    "description": "Write comprehensive documentation for the project",
+    "priority": "High",
+    "dueDate": "2026-06-15T00:00:00Z",
+    "userId": "extracted-from-jwt-token"
+  }
+  ```
+- Response (201 Created):
+  ```json
+  {
+    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "title": "Complete project documentation",
+    "description": "Write comprehensive documentation for the project",
+    "status": "Pending",
+    "priority": "High",
+    "dueDate": "2026-06-15T00:00:00Z",
+    "userId": "user-id-here",
+    "createdAt": "2026-06-10T12:00:00Z",
+    "updatedAt": "2026-06-10T12:00:00Z"
+  }
+  ```
+
+**EDIT MODE:**
+- API: `PUT /api/tasks/{id}` (Tasks API - port 5077)
+- Request body:
+  ```json
+  {
+    "title": "Complete project documentation (Updated)",
+    "description": "Write comprehensive documentation for the project including API docs",
+    "status": "InProgress",
+    "priority": "High",
+    "dueDate": "2026-06-16T00:00:00Z",
+    "userId": "extracted-from-jwt-token"
+  }
+  ```
+- Response (200 OK): Updated TaskEntity
+- Response (404 Not Found):
+  ```json
+  {
+    "error": "Task not found"
+  }
+  ```
+
+**Implementation Guide (TDD):**
+
+1. **Setup Component Structure**
+   - Create `TaskFormModal.vue` with Composition API
+   - Props: `isOpen` (boolean), `mode` ('create' | 'edit'), `taskData` (optional)
+   - Emit events: `close`, `save`
+
+2. **Form State Management**
+   - Create `composables/useTaskForm.ts` (optional)
+   - Reactive form data: title, description, priority, dueDate, status
+   - Validation rules for each field
+   - Form submission handler
+   - Reset form function
+
+3. **API Integration**
+   - Update `services/api.js`:
+     - `createTask(taskData)` → POST /api/tasks
+     - `updateTask(id, taskData)` → PUT /api/tasks/{id}
+   - Update `stores/tasksStore.js`:
+     - `createTask` action
+     - `updateTask` action
+   - Extract userId from JWT token (auth store)
+
+4. **UI Components**
+   - Modal backdrop and container
+   - Form header (title: "Create Task" or "Edit Task")
+   - Input fields with validation feedback
+   - Priority dropdown (Low/Medium/High)
+   - Status dropdown (only in edit mode)
+   - Date picker for due date
+   - Cancel and Save buttons
+   - Loading spinner overlay
+
+5. **Validation Rules**
+   - Title: Required, 1-200 characters
+   - Description: Optional, max 1000 characters
+   - Priority: Required, one of: Low, Medium, High
+   - Due Date: Optional, must be future date (or today)
+   - Status: Required in edit mode, one of: Pending, InProgress, Completed
+
+6. **Test Strategy**
+   - **Unit Tests**:
+     - Test validation rules
+     - Test form state management
+     - Test API call formatting
+   - **Component Tests**:
+     - Test create mode (empty form)
+     - Test edit mode (pre-filled form)
+     - Test form submission (success)
+     - Test error handling (400, 404)
+     - Test form reset
+     - Test cancel button
+
+**Files to Create:**
+```
+apps/web/src/components/tasks/TaskFormModal.vue
+apps/web/src/composables/useTaskForm.ts (optional)
+apps/web/tests/components/tasks/TaskFormModal.spec.js
+```
+
+**Files to Modify:**
+```
+apps/web/src/services/api.js (add createTask, updateTask)
+apps/web/src/stores/tasksStore.js (add createTask, updateTask actions)
+apps/web/src/views/TasksView.vue (integrate modal)
+```
+
+**Dependencies:**
+- ✅ POST /api/tasks (US-02 - backend implemented)
+- ✅ PUT /api/tasks/{id} (US-04 - backend implemented)
+- 🔲 Issue #19 completed (JWT authentication)
+- 🔲 Issue #10 completed (Task List View)
+- 🔲 Vue.js 3 project setup
+- 🔲 Date picker library (e.g., VueDatePicker or native input[type="date"])
+
+**UI/UX Considerations:**
+- Modal should close on ESC key or backdrop click
+- Auto-focus on title field when modal opens
+- Tab order: title → description → priority → due date → status → cancel → save
+- Enter key submits form (if focus is not on textarea)
+- Show asterisk (*) on required fields
+- Disable save button if form is invalid
+- Show loading spinner on save button during submission
+- Display success toast: "Task created successfully" or "Task updated successfully"
+- On success, close modal and refresh task list
+
+**Status**: 🔲 **PENDING** (blocked by Issue #19 - API Security)
 
 ---
 
-#### US-17: User Interface - Task Actions
+#### US-17: User Interface - Task Actions (Delete & Status Update)
 **As a** logged-in user  
 **I want to** quick actions on tasks  
 **So that I** can manage tasks efficiently
 
 **Acceptance Criteria:**
-- Edit button opens edit form
-- Delete button shows confirmation dialog
-- Status change dropdown (inline)
-- Visual feedback for all actions
-- Optimistic UI updates
-- Error handling with rollback
+- Edit button on each task card/row → Opens Task Form Modal in edit mode
+- Delete button on each task card/row → Shows confirmation dialog
+- Confirmation dialog:
+  - Message: "Are you sure you want to delete '{taskTitle}'? This action cannot be undone."
+  - Cancel and Delete buttons
+  - Close on ESC or backdrop click
+- Status change dropdown (inline on task card/row)
+  - Options: Pending, In Progress, Completed
+  - Visual feedback on change (optimistic UI update)
+  - Revert on API error
+- Visual feedback for all actions (loading indicators)
+- Optimistic UI updates (instant feedback)
+- Error handling with rollback (show error, revert UI)
+- Success notifications (toast): "Task deleted successfully", "Status updated successfully"
 
-**Status**: 🔲 **PENDING**
+**Technical Details:**
+
+**DELETE ACTION:**
+- API: `DELETE /api/tasks/{id}` (Tasks API - port 5077)
+- Response (204 No Content): Success, no body
+- Response (404 Not Found):
+  ```json
+  {
+    "error": "Task not found"
+  }
+  ```
+- Response (403 Forbidden): User doesn't own this task
+
+**STATUS UPDATE ACTION:**
+- API: `PUT /api/tasks/{id}` (same as full update, but only changing status)
+- Request body:
+  ```json
+  {
+    "title": "existing-title",
+    "description": "existing-description",
+    "status": "InProgress",
+    "priority": "existing-priority",
+    "dueDate": "existing-due-date",
+    "userId": "extracted-from-jwt-token"
+  }
+  ```
+- Response (200 OK): Updated TaskEntity
+
+**Implementation Guide (TDD):**
+
+1. **Setup Action Components**
+   - Create `components/tasks/TaskActions.vue`
+     - Props: `task` (TaskEntity object)
+     - Emit events: `edit`, `delete`, `statusChange`
+   - Create `components/tasks/DeleteConfirmDialog.vue`
+     - Props: `isOpen` (boolean), `taskTitle` (string)
+     - Emit events: `confirm`, `cancel`
+
+2. **Delete Functionality**
+   - Update `services/api.js`:
+     - `deleteTask(id)` → DELETE /api/tasks/{id}
+   - Update `stores/tasksStore.js`:
+     - `deleteTask` action
+     - Optimistic UI: Remove from state immediately
+     - On error: Re-add to state, show error notification
+   - Handle confirmation dialog state
+
+3. **Status Update Functionality**
+   - Use existing `updateTask` from US-16
+   - Optimistic UI: Update status in state immediately
+   - On error: Revert to original status, show error notification
+   - Show loading indicator on dropdown during API call
+
+4. **UI Components**
+   - Action buttons (icon buttons or dropdown menu):
+     - Edit button (pencil icon)
+     - Delete button (trash icon)
+   - Status dropdown (inline select or custom dropdown)
+   - Confirmation dialog:
+     - Modal backdrop
+     - Dialog box with message
+     - Cancel (secondary) and Delete (danger) buttons
+   - Loading indicators (spinners on buttons)
+
+5. **Optimistic UI Pattern**
+   - **On action trigger**:
+     1. Update UI immediately (remove item, change status)
+     2. Make API call
+     3. On success: Keep UI as is, show success toast
+     4. On error: Revert UI, show error toast
+   - **Benefits**: Feels instant, better UX
+
+6. **Test Strategy**
+   - **Unit Tests**:
+     - Test delete action (success, 404, error)
+     - Test status update (success, error)
+     - Test optimistic UI rollback logic
+   - **Component Tests**:
+     - Test delete button opens confirmation
+     - Test confirmation dialog cancel
+     - Test confirmation dialog confirm (calls API)
+     - Test edit button emits event
+     - Test status dropdown change
+     - Test loading states
+     - Test error handling
+
+**Files to Create:**
+```
+apps/web/src/components/tasks/TaskActions.vue
+apps/web/src/components/tasks/DeleteConfirmDialog.vue
+apps/web/tests/components/tasks/TaskActions.spec.js
+apps/web/tests/components/tasks/DeleteConfirmDialog.spec.js
+```
+
+**Files to Modify:**
+```
+apps/web/src/services/api.js (add deleteTask function)
+apps/web/src/stores/tasksStore.js (add deleteTask action, update status logic)
+apps/web/src/views/TasksView.vue (integrate TaskActions component)
+apps/web/src/components/tasks/TaskCard.vue (add TaskActions to each card)
+```
+
+**Dependencies:**
+- ✅ DELETE /api/tasks/{id} (US-05 - backend implemented)
+- ✅ PUT /api/tasks/{id} (US-04 - backend implemented)
+- 🔲 Issue #19 completed (JWT authentication)
+- 🔲 Issue #10 completed (Task List View with task cards)
+- 🔲 Issue US-16 completed (Task Form Modal for edit action)
+
+**UI/UX Considerations:**
+- Action buttons should be visible on hover (desktop) or always visible (mobile)
+- Use icon buttons with tooltips for better UX
+- Delete button should be in danger color (red)
+- Confirmation dialog should have clear, non-technical language
+- Optimistic UI makes app feel faster
+- Show undo option after delete (optional, advanced)
+- Disable all actions during loading
+- Status dropdown should match task card status badge colors
+- Consider using dropdown menu (three dots) to group actions on mobile
+
+**Keyboard Shortcuts (Optional):**
+- `E` key: Edit selected task
+- `Delete` key: Delete selected task (with confirmation)
+- `Enter` in confirmation: Confirm delete
+- `ESC` in confirmation: Cancel
+
+**Status**: 🔲 **PENDING** (blocked by Issue #19 - API Security)
 
 ---
 

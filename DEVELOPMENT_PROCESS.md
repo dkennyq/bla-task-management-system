@@ -1,8 +1,9 @@
 # Development Process & Thought Process
+
 ## BLA Task Management System - Technical Interview Exercise
 
 **Repository:** https://github.com/dkennyq/bla-task-management-system  
-**Developer:** David Kenny Quiñones  
+**Developer:** Kenny Quevedo Doria  
 **Date:** June 2026  
 **Status:** ✅ Completed
 
@@ -21,7 +22,9 @@ This document details the **thought process**, **methodology**, and **AI-assiste
 - ✅ **Production-Ready** - Fully containerized with Docker Compose
 - ✅ **Complete Documentation** - Clear, comprehensive, developer-friendly
 
-**Time Investment:** ~8-12 hours total development time  
+**Time Allocated:** 72 hours (3 days)  
+**Time Invested:** ~19 hours actual development time  
+**Timeline:** Tuesday 4:00 PM - 11:00 PM (7h), Wednesday 2:00 PM - Thursday 2:00 AM (12h)  
 **Result:** Production-ready full-stack application with microservices architecture
 
 ---
@@ -33,9 +36,11 @@ This document details the **thought process**, **methodology**, and **AI-assiste
 Rather than developing everything manually, I employed a **strategic multi-agent approach** leveraging AI coding assistants as specialized team members:
 
 #### 1. **GitHub Copilot (Plan Version)** - The Technical Lead & Architect
+
 **Role:** Planning, analysis, architecture, specifications, code review
 
 **Responsibilities:**
+
 - 📋 Task breakdown and requirement analysis
 - 🏗️ Architecture design and technical decisions
 - 📝 Detailed technical specifications for each feature
@@ -45,15 +50,18 @@ Rather than developing everything manually, I employed a **strategic multi-agent
 - 📚 Documentation generation
 
 **Why Copilot for this role:**
+
 - Advanced reasoning capabilities for architecture decisions
 - Context-aware across entire codebase
 - Excellent at breaking down complex requirements
 - Strong in documentation and specification writing
 
 #### 2. **OpenCode CLI (Free Version)** - The Implementation Engineer
+
 **Role:** Code implementation, testing, execution
 
 **Responsibilities:**
+
 - 💻 Writing backend code (.NET, C#)
 - 🧪 Implementing unit and integration tests
 - 🎨 Building frontend components (Vue.js, TypeScript)
@@ -62,6 +70,7 @@ Rather than developing everything manually, I employed a **strategic multi-agent
 - ⚡ Quick iterations and bug fixes
 
 **Why OpenCode for this role:**
+
 - Fast code generation
 - Good at following specifications
 - Efficient at repetitive tasks
@@ -83,6 +92,7 @@ graph LR
 ```
 
 **Benefits of This Approach:**
+
 - ⚡ **Faster Development** - AI handles boilerplate and repetitive tasks
 - 🎯 **Higher Quality** - Two-stage review (implementation + validation)
 - 📈 **Better Architecture** - Dedicated planning phase before coding
@@ -93,11 +103,12 @@ graph LR
 
 ## 📋 Development Phases
 
-### Phase 1: Initial Setup & Context (Day 1 - 2 hours)
+### Phase 1: Initial Setup & Context (Tuesday 4:00 PM - 6:00 PM, ~2 hours)
 
 **Objective:** Understand requirements and set up AI agents
 
 **Activities:**
+
 1. **Requirements Analysis**
    - Read and analyzed technical interview document (Net - BLA - Technical Interview Exercise - V5.pdf)
    - Extracted user stories (US-01 through US-09)
@@ -120,13 +131,14 @@ graph LR
 
 ---
 
-### Phase 2: Architecture & Planning (Day 1-2 - 3 hours)
+### Phase 2: Architecture & Planning (Tuesday 6:00 PM - 8:00 PM, ~2 hours)
 
 **Led by:** GitHub Copilot
 
 **Activities:**
 
 1. **Clean Architecture Design**
+
    ```
    ✅ Domain Layer      - Business entities, no dependencies
    ✅ Application Layer - Use cases, depends only on Domain
@@ -161,6 +173,7 @@ graph LR
    - TailwindCSS for styling
 
 **Deliverables:**
+
 - Architecture document (USER_STORIES.md)
 - API endpoint specifications
 - Database schema designs
@@ -168,15 +181,18 @@ graph LR
 
 ---
 
-### Phase 3: Backend Implementation - Tasks API (Day 2-3 - 4 hours)
+### Phase 3: Backend Implementation - Tasks API (Tuesday 8:00 PM - Wednesday 3:00 PM, ~4 hours split across days)
 
 **Implementation by:** OpenCode CLI  
 **Supervision by:** GitHub Copilot
 
 #### 3.1 Domain Layer
+
 **Specification (Copilot):**
+
 ```markdown
 Create Task entity with:
+
 - Id, Title, Description
 - Status (Pending, InProgress, Done)
 - Priority (Low, Medium, High)
@@ -186,17 +202,21 @@ Create Task entity with:
 ```
 
 **Implementation (OpenCode):**
+
 - Created `Task.cs` entity
 - Created `TaskStatus.cs` and `Priority.cs` value objects
 - No external dependencies (pure domain)
 
 **Tests (OpenCode + Copilot):**
+
 - 15+ unit tests for domain logic
 - Value object equality tests
 - Entity validation tests
 
 #### 3.2 Application Layer
+
 **Specification (Copilot):**
+
 ```markdown
 Implement CQRS pattern:
 Commands: CreateTask, UpdateTask, DeleteTask
@@ -205,20 +225,25 @@ Each with handler and validation
 ```
 
 **Implementation (OpenCode):**
+
 - Command handlers with business logic
 - Query handlers for data retrieval
 - DTOs for request/response
 - Validation logic
 
 **Tests (OpenCode):**
+
 - 20+ unit tests for handlers
 - Validation test cases
 - Mock repository usage
 
 #### 3.3 Infrastructure Layer
+
 **Specification (Copilot):**
+
 ```markdown
 MongoDB implementation:
+
 - Use MongoDB.Driver 2.25.0 (native)
 - Repository pattern
 - Connection management
@@ -226,29 +251,35 @@ MongoDB implementation:
 ```
 
 **Implementation (OpenCode):**
+
 - `MongoTaskRepository.cs` with native driver
 - Connection string configuration
 - BSON serialization setup
 - Async operations
 
 **Tests (OpenCode):**
+
 - Integration tests with MongoDB
 - Repository CRUD tests
 - Connection tests
 
 #### 3.4 WebApi Layer
+
 **Specification (Copilot):**
+
 ```markdown
 TasksController with:
+
 - GET /api/tasks (with filtering)
 - POST /api/tasks
 - GET /api/tasks/{id}
 - PUT /api/tasks/{id}
 - DELETE /api/tasks/{id}
-JWT authorization required
+  JWT authorization required
 ```
 
 **Implementation (OpenCode):**
+
 - RESTful controller
 - JWT authentication
 - Authorization attributes
@@ -256,21 +287,25 @@ JWT authorization required
 - Swagger annotations
 
 **Tests (OpenCode):**
+
 - 17+ controller unit tests
 - Authorization tests
 - Error case tests
 
 ---
 
-### Phase 4: Backend Implementation - Users API (Day 3-4 - 4 hours)
+### Phase 4: Backend Implementation - Users API (Wednesday 3:00 PM - 7:00 PM, ~4 hours)
 
 **Implementation by:** OpenCode CLI  
 **Supervision by:** GitHub Copilot
 
 #### 4.1 Domain Layer
+
 **Specification (Copilot):**
+
 ```markdown
 Create User entity with:
+
 - Id, Email, Username
 - PasswordHash (never plain text)
 - Role (Manager, Operator)
@@ -279,39 +314,48 @@ Create User entity with:
 ```
 
 **Implementation (OpenCode):**
+
 - `User.cs` entity
 - `Role.cs` enum
 - `Email.cs` value object
 - Domain validation
 
 #### 4.2 Application Layer
+
 **Specification (Copilot):**
+
 ```markdown
 Authentication logic:
+
 - RegisterUser (with password hashing)
 - LoginUser (generate JWT)
 - RefreshToken
 - GetUserProfile
 - UpdateProfile
 - ResetPassword
-BCrypt for password hashing
+  BCrypt for password hashing
 ```
 
 **Implementation (OpenCode):**
+
 - Authentication service
 - JWT token generation
 - BCrypt password hashing
 - Token refresh logic
 
 **Tests (OpenCode):**
+
 - Authentication flow tests
 - Password hashing tests
 - JWT validation tests
 
 #### 4.3 Infrastructure Layer
+
 **Specification (Copilot):**
+
 ```markdown
 PostgreSQL implementation:
+
 - Use Npgsql 8.0.3 (native)
 - Repository pattern
 - Async operations
@@ -319,20 +363,25 @@ PostgreSQL implementation:
 ```
 
 **Implementation (OpenCode):**
+
 - `PostgresUserRepository.cs`
 - Raw SQL with Npgsql
 - Connection pooling
 - Transaction support
 
 **Tests (OpenCode):**
+
 - Integration tests with PostgreSQL
 - CRUD operations tests
 - Concurrent access tests
 
 #### 4.4 WebApi Layer
+
 **Specification (Copilot):**
+
 ```markdown
 Two controllers:
+
 1. UsersController:
    - POST /api/users/register
    - POST /api/users/login
@@ -348,6 +397,7 @@ Two controllers:
 ```
 
 **Implementation (OpenCode):**
+
 - Two controllers
 - Role-based authorization
 - JWT authentication
@@ -355,15 +405,18 @@ Two controllers:
 
 ---
 
-### Phase 5: Frontend Implementation (Day 4-5 - 3 hours)
+### Phase 5: Frontend Implementation (Wednesday 7:00 PM - 10:00 PM, ~3 hours)
 
 **Implementation by:** OpenCode CLI  
 **Supervision by:** GitHub Copilot
 
 #### 5.1 Project Setup
+
 **Specification (Copilot):**
+
 ```markdown
 Vue.js 3 + Vite:
+
 - TypeScript support
 - Pinia store
 - Vue Router
@@ -372,15 +425,19 @@ Vue.js 3 + Vite:
 ```
 
 **Implementation (OpenCode):**
+
 - Created Vite project
 - Configured TypeScript
 - Set up TailwindCSS
 - Configured Axios clients
 
 #### 5.2 Views
+
 **Specification (Copilot):**
+
 ```markdown
 Required views:
+
 1. Login - JWT authentication
 2. Register - User registration
 3. Tasks - CRUD with filters
@@ -388,29 +445,37 @@ Required views:
 ```
 
 **Implementation (OpenCode):**
+
 - 5 Vue components (including Home)
 - Responsive design
 - Form validation
 - Error handling
 
 #### 5.3 State Management
+
 **Specification (Copilot):**
+
 ```markdown
 Pinia stores:
+
 1. authStore - JWT tokens, user info, login/logout
 2. tasksStore - Task CRUD, filters, pagination
 ```
 
 **Implementation (OpenCode):**
+
 - Two Pinia stores
 - Persistent auth (localStorage)
 - API integration
 - Error handling
 
 #### 5.4 API Integration
+
 **Specification (Copilot):**
+
 ```markdown
 Axios configuration:
+
 - Two clients (tasksApiClient, usersApiClient)
 - JWT interceptors
 - Error interceptors
@@ -418,21 +483,25 @@ Axios configuration:
 ```
 
 **Implementation (OpenCode):**
+
 - Configured axios instances
 - Request/response interceptors
 - Token refresh logic
 
 ---
 
-### Phase 6: Docker & DevOps (Day 5-6 - 2 hours)
+### Phase 6: Docker & DevOps (Wednesday 10:00 PM - 11:30 PM, ~1.5 hours)
 
 **Specification by:** GitHub Copilot  
 **Implementation by:** OpenCode CLI
 
 #### 6.1 Docker Compose Stack
+
 **Specification (Copilot):**
+
 ```markdown
 Services:
+
 1. mongodb - MongoDB 7 with init scripts
 2. postgres - PostgreSQL 16 with init scripts
 3. tasks-api - .NET 8 API
@@ -441,6 +510,7 @@ Services:
 6. seq - Log aggregation
 
 Configuration:
+
 - Health checks for databases
 - Dependency management
 - Volume persistence
@@ -448,6 +518,7 @@ Configuration:
 ```
 
 **Implementation (OpenCode):**
+
 - docker-compose.yml with 6 services
 - Dockerfiles for each service
 - Init scripts for databases
@@ -455,14 +526,18 @@ Configuration:
 - Volume mounts
 
 #### 6.2 Database Initialization
+
 **Specification (Copilot):**
+
 ```markdown
 MongoDB init script:
+
 - Create tasksdb database
 - Create tasks collection
 - Create index on userId
 
 PostgreSQL init script:
+
 - Create usersdb database
 - Create users table
 - Create roles table
@@ -470,30 +545,36 @@ PostgreSQL init script:
 ```
 
 **Implementation (OpenCode):**
+
 - `init-mongo.js` script
 - `init-postgres.sql` script
 - Seed data with test users
 
 ---
 
-### Phase 7: Testing & Validation (Day 6-7 - 2 hours)
+### Phase 7: Testing & Validation (Wednesday 11:30 PM - Thursday 1:00 AM, ~1.5 hours)
 
 **Led by:** GitHub Copilot
 
 #### 7.1 Test Execution
+
 **Activities:**
+
 - Ran all backend tests (70+ tests passing)
 - Ran frontend tests
 - Manual testing of all endpoints
 - Integration testing of full stack
 
 #### 7.2 API Testing
+
 **Tools used:**
+
 - Swagger UI for interactive testing
 - Postman collection for automated testing
 - curl commands for quick checks
 
 **Test Coverage:**
+
 - ✅ All CRUD operations
 - ✅ Authentication flows
 - ✅ Authorization (RBAC)
@@ -501,7 +582,9 @@ PostgreSQL init script:
 - ✅ Edge cases
 
 #### 7.3 Bug Fixes & Improvements
+
 **Issues Found and Fixed:**
+
 1. **API URL Configuration Bug**
    - Problem: Frontend getting 404 errors
    - Root cause: Missing `/api` suffix in environment variables
@@ -516,12 +599,14 @@ PostgreSQL init script:
 
 ---
 
-### Phase 8: Documentation & Final Polish (Day 7-8 - 2 hours)
+### Phase 8: Documentation & Final Polish (Thursday 1:00 AM - 2:00 AM, ~1 hour)
 
 **Led by:** GitHub Copilot
 
 #### 8.1 Documentation Generation
+
 **Documents Created:**
+
 - README.md - Main project documentation with Mermaid diagram
 - docs/SETUP.md - Installation and configuration guide
 - docs/TESTING_APIS.md - API testing guide
@@ -531,9 +616,12 @@ PostgreSQL init script:
 - DEVELOPMENT_PROCESS.md - This document
 
 #### 8.2 Architecture Diagram
+
 **Specification (Copilot):**
+
 ```markdown
 Create Mermaid diagram showing:
+
 - Frontend Layer (Vue.js)
 - API Layer (Tasks API, Users API)
 - Data Layer (MongoDB, PostgreSQL)
@@ -542,13 +630,16 @@ Create Mermaid diagram showing:
 ```
 
 **Implementation (Copilot):**
+
 - Professional Mermaid diagram
 - Color-coded layers
 - Clear data flow arrows
 - GitHub-rendered SVG
 
 #### 8.3 Final Validation
+
 **Compliance Report:**
+
 - Created comprehensive compliance report
 - Validated all user stories (US-01 to US-09)
 - Verified technical constraints
@@ -575,16 +666,19 @@ Throughout development, I maintained a continuous feedback loop between the two 
 **Example Iteration - Authentication Flow:**
 
 **Iteration 1:**
+
 - Copilot: Specified basic JWT authentication
 - OpenCode: Implemented login endpoint
 - Copilot Review: "Add token refresh for better UX"
 
 **Iteration 2:**
+
 - Copilot: Specified refresh token mechanism
 - OpenCode: Added refresh endpoint
 - Copilot Review: "Add token expiration handling in frontend"
 
 **Iteration 3:**
+
 - OpenCode: Added token expiration interceptor
 - Copilot Review: ✅ Complete
 
@@ -593,9 +687,11 @@ Throughout development, I maintained a continuous feedback loop between the two 
 ## 🎯 Key Technical Decisions
 
 ### 1. Microservices vs Monolith
+
 **Decision:** Microservices (2 separate APIs)
 
 **Rationale:**
+
 - ✅ Separation of concerns (Tasks vs Users)
 - ✅ Different databases for different domains
 - ✅ Independent scaling potential
@@ -603,23 +699,26 @@ Throughout development, I maintained a continuous feedback loop between the two 
 - ✅ Demonstrates advanced architecture skills
 
 ### 2. Database Choices
+
 **Decision:** MongoDB for Tasks, PostgreSQL for Users
 
 **Rationale:**
+
 - **MongoDB for Tasks:**
   - Flexible schema for task properties
   - Fast reads/writes for task operations
   - Document model fits task structure
-  
 - **PostgreSQL for Users:**
   - ACID compliance for user data
   - Strong consistency for authentication
   - Relational model for roles
 
 ### 3. Native Drivers Only
+
 **Decision:** MongoDB.Driver 2.25.0 and Npgsql 8.0.3 (no ORM)
 
 **Rationale:**
+
 - ✅ Exercise requirement (no Entity Framework/Dapper)
 - ✅ Better performance (direct DB access)
 - ✅ Full control over queries
@@ -627,9 +726,11 @@ Throughout development, I maintained a continuous feedback loop between the two 
 - ⚠️ More boilerplate code (acceptable trade-off)
 
 ### 4. Docker-First Development
+
 **Decision:** Docker Compose as primary development method
 
 **Rationale:**
+
 - ✅ Consistent environment across machines
 - ✅ Easy onboarding (just `docker compose up`)
 - ✅ Production-like setup
@@ -637,9 +738,11 @@ Throughout development, I maintained a continuous feedback loop between the two 
 - ✅ No "works on my machine" issues
 
 ### 5. JWT + Role-Based Access Control
+
 **Decision:** JWT tokens with Manager/Operator roles
 
 **Rationale:**
+
 - ✅ Stateless authentication
 - ✅ Scalable across services
 - ✅ Industry standard
@@ -657,27 +760,30 @@ For each feature, I followed the RED-GREEN-REFACTOR cycle:
 #### Example: Create Task Feature
 
 **RED Phase (Write Failing Test):**
+
 ```csharp
 [Fact]
 public async Task CreateTask_WithValidData_ReturnsCreatedTask()
 {
     // Arrange
-    var command = new CreateTaskCommand { 
+    var command = new CreateTaskCommand {
         Title = "Test Task",
         UserId = "user123"
     };
-    
+
     // Act
     var result = await _handler.Handle(command);
-    
+
     // Assert
     result.Should().NotBeNull();
     result.Id.Should().NotBeEmpty();
 }
 ```
+
 Result: ❌ Test fails (handler not implemented)
 
 **GREEN Phase (Make It Pass):**
+
 ```csharp
 public async Task<TaskDto> Handle(CreateTaskCommand command)
 {
@@ -686,9 +792,11 @@ public async Task<TaskDto> Handle(CreateTaskCommand command)
     return task.ToDto();
 }
 ```
+
 Result: ✅ Test passes
 
 **REFACTOR Phase (Clean Up):**
+
 ```csharp
 public async Task<TaskDto> Handle(CreateTaskCommand command)
 {
@@ -698,6 +806,7 @@ public async Task<TaskDto> Handle(CreateTaskCommand command)
     return _mapper.Map<TaskDto>(task);
 }
 ```
+
 Result: ✅ Test still passes, code cleaner
 
 ### Test Coverage Achieved
@@ -768,17 +877,24 @@ docker compose exec web npm run test:unit
 
 ### Development Time Breakdown
 
-| Phase | Time | Percentage |
-|-------|------|------------|
-| Planning & Architecture | 3h | 25% |
-| Backend Implementation | 6h | 50% |
-| Frontend Implementation | 2h | 17% |
-| Docker & DevOps | 1h | 8% |
-| Testing & Validation | 1h | 8% |
-| Documentation | 2h | 17% |
-| **Total** | **~12h** | **100%** |
+**Timeline:**
+- **Tuesday, June 10:** 4:00 PM - 11:00 PM (7 hours)
+- **Wednesday, June 11:** 2:00 PM - Thursday 2:00 AM (12 hours)
+- **Total:** 19 hours actual development time
 
-*Note: Time significantly reduced by AI assistance (estimated 30-40 hours manually)*
+**Phase Distribution:**
+
+| Phase                   | Time      | Percentage | Timeline                                    |
+| ----------------------- | --------- | ---------- | ------------------------------------------- |
+| Planning & Architecture | 4h        | 21%        | Tue 4PM-6PM, 6PM-8PM (2h + 2h)              |
+| Backend Implementation  | 8h        | 42%        | Tue 8PM-11PM + Wed 2PM-3PM, Wed 3PM-7PM (4h + 4h) |
+| Frontend Implementation | 3h        | 16%        | Wed 7PM-10PM                                |
+| Docker & DevOps         | 1.5h      | 8%         | Wed 10PM-11:30PM                            |
+| Testing & Validation    | 1.5h      | 8%         | Wed 11:30PM-Thu 1AM                         |
+| Documentation           | 1h        | 5%         | Thu 1AM-2AM                                 |
+| **Total**               | **19h**   | **100%**   | **Tue 4PM - Thu 2AM (across 2 days)**       |
+
+_Note: Time significantly reduced by AI assistance. Estimated 60-72 hours for manual implementation without AI tools. The 72-hour time limit provided ample room for thorough work with **~26% actual time usage** (19h/72h)._
 
 ### Code Statistics
 
@@ -870,7 +986,7 @@ Documentation:
 ✅ **YAGNI** - Only implemented required features  
 ✅ **Security First** - JWT, password hashing, RBAC  
 ✅ **Documentation** - Clear, comprehensive, up-to-date  
-✅ **Testing** - TDD with high coverage  
+✅ **Testing** - TDD with high coverage
 
 ---
 
@@ -879,6 +995,7 @@ Documentation:
 If this were a production system, next steps would include:
 
 ### Technical Improvements
+
 - [ ] Add Elasticsearch for task search
 - [ ] Implement real-time notifications (SignalR)
 - [ ] Add Redis for caching
@@ -891,6 +1008,7 @@ If this were a production system, next steps would include:
 - [ ] Set up load balancing
 
 ### Features
+
 - [ ] Task comments and attachments
 - [ ] Task sharing and collaboration
 - [ ] Email notifications
@@ -903,6 +1021,7 @@ If this were a production system, next steps would include:
 - [ ] Webhooks for task events
 
 ### Operations
+
 - [ ] Kubernetes deployment
 - [ ] Monitoring and alerting
 - [ ] Backup and disaster recovery
@@ -915,6 +1034,7 @@ If this were a production system, next steps would include:
 ## 📚 References & Resources
 
 ### Official Documentation
+
 - [.NET 8 Documentation](https://learn.microsoft.com/en-us/dotnet/)
 - [MongoDB.Driver Documentation](https://www.mongodb.com/docs/drivers/csharp/)
 - [Npgsql Documentation](https://www.npgsql.org/doc/)
@@ -922,10 +1042,12 @@ If this were a production system, next steps would include:
 - [Docker Documentation](https://docs.docker.com/)
 
 ### AI Tools Used
+
 - **GitHub Copilot** - Planning, architecture, code review
 - **OpenCode CLI** - Implementation, testing
 
 ### Architecture Patterns
+
 - Clean Architecture by Robert C. Martin
 - Microservices Patterns by Chris Richardson
 - Domain-Driven Design by Eric Evans
@@ -978,13 +1100,13 @@ This project demonstrates the **effective use of AI-assisted development** to de
 ✅ **Professional Quality** - Clean code, comprehensive tests, excellent docs  
 ✅ **Production Ready** - Docker containerized, secure, scalable  
 ✅ **AI-Powered** - Strategic use of multiple AI agents for maximum efficiency  
-✅ **Well Documented** - Clear process, architecture, and decisions  
+✅ **Well Documented** - Clear process, architecture, and decisions
 
 ### The AI Advantage
 
 By leveraging **GitHub Copilot** for planning and **OpenCode CLI** for implementation, I was able to:
 
-- 📈 Reduce development time by ~70%
+- 📈 Reduce development time by ~73% (19h actual vs 60-72h estimated manual)
 - 🎯 Maintain high code quality through two-stage review
 - 📚 Generate comprehensive documentation automatically
 - 🧪 Implement thorough test coverage with TDD
@@ -998,9 +1120,9 @@ This approach demonstrates **modern software development practices** where AI is
 
 **Status:** ✅ Ready for review and deployment
 
-**Developer:** David Kenny Quiñones  
+**Developer:** Kenny Quevedo Doria  
 **Date:** June 2026
 
 ---
 
-*This document was generated as part of the development process and serves as the presentation of the thought process during the technical exercise.*
+_This document was generated as part of the development process and serves as the presentation of the thought process during the technical exercise._
